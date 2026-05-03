@@ -68,7 +68,11 @@
       "Bash(node -e ' *)",
       "Read(//c/Users/Sergio/.ssh/**)",
       "Bash(gh --version)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://laps.gvtsy.com/api/leaderboard/tracks)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://laps.gvtsy.com/api/leaderboard/tracks)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Sergio\\\\Documents\\\\LapTracker9000\\\\packages\\\\web\\\\src\\\\\" -Recurse -Include \"*.tsx\", \"*.ts\", \"*.css\" | Select-Object -ExpandProperty FullName)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Sergio\\Documents\\Github\\apex-watcher",

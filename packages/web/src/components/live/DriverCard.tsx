@@ -6,21 +6,65 @@ export default function DriverCard({ driver, rank, leaderBestMs }: { driver: Liv
   const isLeader = gap === 0;
 
   return (
-    <div className="card" style={{ padding: '14px 16px', minWidth: 200 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
-        <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>P{rank}</span>
-        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{driver.lapCount} laps</span>
+    <div style={{
+      background: isLeader
+        ? 'linear-gradient(135deg, #1a0000 0%, #0f0000 60%, #0a0000 100%)'
+        : 'linear-gradient(135deg, #111 0%, #0b0b0b 100%)',
+      border: `1px solid ${isLeader ? '#440000' : '#222'}`,
+      borderTop: `1px solid ${isLeader ? '#880000' : '#333'}`,
+      borderLeft: `3px solid ${isLeader ? 'var(--accent)' : '#222'}`,
+      borderRadius: 4,
+      padding: '14px 16px',
+      minWidth: 210,
+      position: 'relative',
+      overflow: 'hidden',
+      boxShadow: isLeader ? '0 0 20px rgba(204,0,0,0.15)' : 'none',
+    }}>
+      {/* Top red stripe */}
+      {isLeader && (
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, var(--accent), transparent)' }} />
+      )}
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <span style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: 20,
+          fontWeight: 900,
+          letterSpacing: '-0.02em',
+          color: isLeader ? 'var(--accent)' : '#333',
+          lineHeight: 1,
+        }}>
+          P{rank}
+        </span>
+        <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}>
+          {driver.lapCount} LAPS
+        </span>
       </div>
-      <div style={{ fontWeight: 600, marginBottom: 8, fontSize: 15 }}>{driver.name}</div>
-      <div className="mono" style={{ fontSize: 22, fontWeight: 700, color: isLeader ? 'var(--accent)' : 'var(--text-primary)', marginBottom: 4 }}>
+
+      <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 15, letterSpacing: '0.02em', color: 'var(--text-primary)' }}>
+        {driver.name}
+      </div>
+
+      <div style={{
+        fontFamily: 'var(--font-display)',
+        fontSize: 20,
+        fontWeight: 800,
+        color: isLeader ? 'var(--accent-hot)' : 'var(--chrome-light)',
+        textShadow: isLeader ? '0 0 16px rgba(255,32,32,0.5)' : 'none',
+        letterSpacing: '0.02em',
+        marginBottom: 4,
+      }}>
         {driver.bestLapMs === Infinity ? '--:--.---' : formatLapTime(driver.bestLapMs)}
       </div>
+
       {!isLeader && driver.bestLapMs !== Infinity && (
-        <div style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+        <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
           +{formatLapTime(gap)}
         </div>
       )}
-      <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-muted)', borderTop: '1px solid var(--border)', paddingTop: 8 }}>
+      {isLeader && <div style={{ fontSize: 10, color: 'var(--accent)', fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }}>LEADER</div>}
+
+      <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid #222', fontSize: 11, color: 'var(--text-muted)', letterSpacing: '0.03em' }}>
         {driver.carModel.replace(/_/g, ' ')}
       </div>
     </div>

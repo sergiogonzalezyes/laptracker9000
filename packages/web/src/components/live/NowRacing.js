@@ -10,7 +10,20 @@ export default function NowRacing() {
     const sortedDrivers = [...drivers.values()].sort((a, b) => a.bestLapMs - b.bestLapMs);
     const leaderBestMs = sortedDrivers[0]?.bestLapMs ?? Infinity;
     if (!isActive && sortedDrivers.length === 0) {
-        return (_jsxs("div", { style: { textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }, children: [_jsx("div", { style: { fontSize: 40, marginBottom: 12 }, children: "\u23F1" }), _jsx("div", { style: { fontSize: 18, fontWeight: 600, color: 'var(--text-secondary)' }, children: "No active session" }), _jsx("div", { style: { fontSize: 13, marginTop: 8 }, children: "Server is offline or no laps in progress" })] }));
+        return (_jsxs("div", { style: { textAlign: 'center', padding: '80px 0', color: 'var(--text-muted)' }, children: [_jsx("div", { style: {
+                        fontFamily: 'var(--font-display)',
+                        fontSize: 48,
+                        fontWeight: 900,
+                        letterSpacing: '0.1em',
+                        marginBottom: 12,
+                        color: '#1a1a1a',
+                    }, children: "\u23F1" }), _jsx("div", { style: { fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: '#2a2a2a', letterSpacing: '0.15em' }, children: "NO ACTIVE SESSION" }), _jsx("div", { style: { fontSize: 12, marginTop: 8, color: '#333', letterSpacing: '0.05em' }, children: "Server is offline or no laps in progress" })] }));
     }
-    return (_jsxs("div", { children: [_jsxs("div", { style: { display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }, children: [_jsx("span", { className: `badge badge-${sessionType.toLowerCase()}`, children: sessionType || 'Practice' }), _jsx("span", { style: { fontWeight: 700, fontSize: 20 }, children: trackDisplayName(track) }), acStatus?.name && (_jsxs("span", { style: { color: 'var(--text-muted)', fontSize: 13 }, children: ["on ", acStatus.name] })), (acStatus?.clients ?? 0) > 0 && (_jsxs("span", { className: "tag", style: { marginLeft: 'auto' }, children: [_jsx("span", { className: "dot dot-green" }), acStatus.clients, " on track"] }))] }), sortedDrivers.length > 0 ? (_jsx("div", { style: { display: 'flex', flexWrap: 'wrap', gap: 12 }, children: sortedDrivers.map((d, i) => (_jsx(DriverCard, { driver: d, rank: i + 1, leaderBestMs: leaderBestMs }, d.name))) })) : (_jsx("div", { style: { color: 'var(--text-muted)', fontSize: 13 }, children: "Waiting for drivers..." }))] }));
+    return (_jsxs("div", { children: [_jsxs("div", { style: { display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24, flexWrap: 'wrap' }, children: [_jsx("span", { className: `badge badge-${sessionType.toLowerCase()}`, children: sessionType || 'PRACTICE' }), _jsx("span", { style: {
+                            fontFamily: 'var(--font-display)',
+                            fontWeight: 800,
+                            fontSize: 22,
+                            letterSpacing: '0.05em',
+                            color: 'var(--text-primary)',
+                        }, children: trackDisplayName(track).toUpperCase() }), acStatus?.name && (_jsx("span", { style: { color: 'var(--text-muted)', fontSize: 12, fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }, children: acStatus.name })), (acStatus?.clients ?? 0) > 0 && (_jsxs("span", { className: "tag", style: { marginLeft: 'auto' }, children: [_jsx("span", { className: "dot dot-red" }), acStatus.clients, " ON TRACK"] }))] }), sortedDrivers.length > 0 ? (_jsx("div", { style: { display: 'flex', flexWrap: 'wrap', gap: 10 }, children: sortedDrivers.map((d, i) => (_jsx(DriverCard, { driver: d, rank: i + 1, leaderBestMs: leaderBestMs }, d.name))) })) : (_jsx("div", { style: { color: 'var(--text-muted)', fontSize: 12, fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }, children: "WAITING FOR DRIVERS..." }))] }));
 }

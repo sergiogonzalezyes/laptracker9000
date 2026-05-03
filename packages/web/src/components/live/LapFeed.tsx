@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useLiveStore, LiveLap } from '../../store/liveStore';
-import { formatLapTime, trackDisplayName } from '../../api/client';
+import { formatLapTime } from '../../api/client';
 
 function lapClass(lap: LiveLap): string {
   if (!lap.valid) return 'lap-invalid';
@@ -9,29 +9,33 @@ function lapClass(lap: LiveLap): string {
   return '';
 }
 
-function LapRow({ lap }: { lap: LiveLap }) {
+function LapRow({ lap, isNew }: { lap: LiveLap; isNew: boolean }) {
   const cls = lapClass(lap);
-  const isNew = Date.now() - lap.timestamp < 2000;
+  const pulseClass = isNew && lap.isPB ? 'lap-pulse' : isNew ? 'lap-new' : '';
 
   return (
-    <tr className={isNew && lap.isPB ? 'lap-pulse' : ''}>
-      <td style={{ width: 28, color: 'var(--text-muted)', fontSize: 11 }}>#{lap.lapNumber || '—'}</td>
-      <td style={{ fontWeight: 500 }}>{lap.driverName}</td>
-      <td className={`mono ${cls}`} style={{ fontSize: 15, fontWeight: 700 }}>
+    <tr className={pulseClass}>
+      <td style={{ width: 32, color: 'var(--text-muted)', fontSize: 10, fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>
+        {lap.lapNumber || '—'}
+      </td>
+      <td style={{ fontWeight: 600, fontSize: 13 }}>{lap.driverName}</td>
+      <td style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700 }} className={cls}>
         {formatLapTime(lap.lapTimeMs)}
       </td>
-      <td style={{ color: 'var(--text-muted)', fontSize: 12 }}>
+      <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)' }}>
         {lap.split1Ms ? formatLapTime(lap.split1Ms) : '—'}
       </td>
-      <td style={{ color: 'var(--text-muted)', fontSize: 12 }}>
+      <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)' }}>
         {lap.split2Ms ? formatLapTime(lap.split2Ms) : '—'}
       </td>
-      <td style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+      <td style={{ fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.02em' }}>
         {lap.carModel.replace(/_/g, ' ')}
       </td>
-      <td style={{ fontSize: 11 }}>
-        {!lap.valid ? <span style={{ color: 'var(--red)', fontSize: 11 }}>✗ {lap.cuts}c</span>
-          : lap.isPB ? <span style={{ color: 'var(--green)', fontSize: 11 }}>PB</span>
+      <td style={{ fontSize: 10, width: 48 }}>
+        {!lap.valid
+          ? <span style={{ color: 'var(--red)', fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>✗ {lap.cuts}c</span>
+          : lap.isPB
+          ? <span style={{ color: 'var(--green)', fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>PB</span>
           : null}
       </td>
     </tr>
@@ -41,6 +45,7 @@ function LapRow({ lap }: { lap: LiveLap }) {
 export default function LapFeed() {
   const { recentLaps } = useLiveStore();
   const topRef = useRef<HTMLDivElement>(null);
+  const now = Date.now();
 
   useEffect(() => {
     topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -48,8 +53,8 @@ export default function LapFeed() {
 
   if (recentLaps.length === 0) {
     return (
-      <div style={{ padding: '40px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
-        No laps yet
+      <div style={{ padding: '50px 16px', textAlign: 'center', color: '#1e1e1e', fontFamily: 'var(--font-display)', letterSpacing: '0.15em', fontSize: 12 }}>
+        NO LAPS YET
       </div>
     );
   }
@@ -64,7 +69,9 @@ export default function LapFeed() {
           </tr>
         </thead>
         <tbody>
-          {recentLaps.slice(0, 40).map(lap => <LapRow key={lap.id} lap={lap} />)}
+          {recentLaps.slice(0, 40).map(lap => (
+            <LapRow key={lap.id} lap={lap} isNew={now - lap.timestamp < 2000} />
+          ))}
         </tbody>
       </table>
     </div>

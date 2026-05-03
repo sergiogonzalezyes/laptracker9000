@@ -18,64 +18,147 @@ export default function Leaderboard() {
     api.leaderboard('?' + params).then(setEntries);
   }, [selectedTrack, typeFilter]);
 
+  const currentTrack = tracks.find(t => t.track === selectedTrack);
+
   return (
     <div>
       {/* Controls */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-        <select
-          value={selectedTrack}
-          onChange={e => setSelectedTrack(e.target.value)}
-          style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 6, padding: '6px 12px', color: 'var(--text-primary)', fontSize: 13, minWidth: 220 }}
-        >
-          {tracks.map(t => (
-            <option key={t.track} value={t.track}>{trackDisplayName(t.track)} ({t.lap_count} laps)</option>
-          ))}
-        </select>
-        <div style={{ display: 'flex', gap: 4 }}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ position: 'relative' }}>
+          <select
+            value={selectedTrack}
+            onChange={e => setSelectedTrack(e.target.value)}
+            style={{ minWidth: 240, paddingRight: 32 }}
+          >
+            {tracks.map(t => (
+              <option key={t.track} value={t.track}>{trackDisplayName(t.track)} ({t.lap_count} laps)</option>
+            ))}
+          </select>
+          <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none', fontSize: 10 }}>▼</span>
+        </div>
+
+        <div style={{ display: 'flex', gap: 2 }}>
           {['', 'PRACTICE', 'QUALIFY', 'RACE'].map(type => (
             <button
               key={type}
               onClick={() => setTypeFilter(type)}
               style={{
-                padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 500,
-                background: typeFilter === type ? 'var(--accent)' : 'var(--bg-elevated)',
-                color: typeFilter === type ? '#000' : 'var(--text-secondary)',
-                border: '1px solid ' + (typeFilter === type ? 'var(--accent)' : 'var(--border)'),
+                padding: '6px 14px',
+                fontFamily: 'var(--font-display)',
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                background: typeFilter === type
+                  ? 'linear-gradient(180deg, #aa0000 0%, #770000 100%)'
+                  : 'var(--bg-elevated)',
+                color: typeFilter === type ? '#fff' : 'var(--text-muted)',
+                border: `1px solid ${typeFilter === type ? '#cc0000' : 'var(--border-chrome)'}`,
+                borderRadius: 0,
+                boxShadow: typeFilter === type ? '0 0 10px rgba(204,0,0,0.3)' : 'none',
+                clipPath: 'polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%)',
               }}
             >
-              {type || 'All'}
+              {type || 'ALL'}
             </button>
           ))}
         </div>
       </div>
 
+      {/* Stats bar */}
+      {currentTrack && (
+        <div style={{ display: 'flex', gap: 1, marginBottom: 16 }}>
+          {[
+            { label: 'Total Laps', value: String(currentTrack.lap_count) },
+            { label: 'Track Record', value: formatLapTime(currentTrack.fastest_ms), mono: true, highlight: true },
+            { label: 'Record Holder', value: currentTrack.fastest_driver },
+          ].map(stat => (
+            <div key={stat.label} style={{
+              flex: 1,
+              padding: '12px 16px',
+              background: 'linear-gradient(135deg, #111 0%, #0b0b0b 100%)',
+              border: '1px solid #222',
+              borderTop: '1px solid #333',
+              position: 'relative',
+              overflow: 'hidden',
+            }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, var(--accent), transparent)', opacity: 0.4 }} />
+              <div style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: '0.15em', marginBottom: 6 }}>
+                {stat.label.toUpperCase()}
+              </div>
+              <div style={{
+                fontFamily: stat.mono ? 'var(--font-display)' : 'var(--font-sans)',
+                fontWeight: 800,
+                fontSize: stat.highlight ? 20 : 16,
+                color: stat.highlight ? 'var(--accent-hot)' : 'var(--text-primary)',
+                textShadow: stat.highlight ? '0 0 14px rgba(255,32,32,0.4)' : 'none',
+                letterSpacing: stat.mono ? '0.05em' : '0',
+              }}>
+                {stat.value}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Leaderboard table */}
       <div className="card">
         <table>
           <thead>
-            <tr><th>Pos</th><th>Driver</th><th>Best Lap</th><th>S1</th><th>S2</th><th>Car</th><th>Date</th></tr>
+            <tr>
+              <th style={{ width: 48 }}>Pos</th>
+              <th>Driver</th>
+              <th>Best Lap</th>
+              <th>S1</th>
+              <th>S2</th>
+              <th>Car</th>
+              <th>Date</th>
+            </tr>
           </thead>
           <tbody>
             {entries.length === 0 && (
-              <tr><td colSpan={7} style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>No times recorded</td></tr>
+              <tr>
+                <td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: '#222', fontFamily: 'var(--font-display)', letterSpacing: '0.15em', fontSize: 11 }}>
+                  NO TIMES RECORDED
+                </td>
+              </tr>
             )}
             {entries.map((e, i) => (
-              <tr key={e.driver_name}>
-                <td style={{ fontWeight: 700, color: i === 0 ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+              <tr key={e.driver_name} style={{
+                background: i === 0 ? 'linear-gradient(90deg, rgba(204,0,0,0.08) 0%, transparent 100%)' : 'transparent',
+                borderLeft: i === 0 ? '2px solid var(--accent)' : '2px solid transparent',
+              }}>
+                <td style={{
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 900,
+                  fontSize: i === 0 ? 18 : 13,
+                  color: i === 0 ? 'var(--accent-hot)' : 'var(--text-muted)',
+                  textShadow: i === 0 ? '0 0 10px rgba(255,32,32,0.5)' : 'none',
+                }}>
                   {i === 0 ? '⚑' : i + 1}
                 </td>
-                <td style={{ fontWeight: 600 }}>{e.driver_name}</td>
-                <td className="mono" style={{ fontWeight: 700, fontSize: 15, color: i === 0 ? 'var(--accent)' : 'var(--text-primary)' }}>
+                <td style={{ fontWeight: 700, fontSize: 14, color: i === 0 ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                  {e.driver_name}
+                </td>
+                <td style={{
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 800,
+                  fontSize: 15,
+                  color: i === 0 ? 'var(--accent-hot)' : 'var(--chrome-light)',
+                  textShadow: i === 0 ? '0 0 12px rgba(255,32,32,0.4)' : 'none',
+                  letterSpacing: '0.03em',
+                }}>
                   {formatLapTime(e.lap_time_ms)}
                 </td>
-                <td style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
+                <td style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
                   {e.split1_ms ? formatLapTime(e.split1_ms) : '—'}
                 </td>
-                <td style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
+                <td style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
                   {e.split2_ms ? formatLapTime(e.split2_ms) : '—'}
                 </td>
-                <td style={{ fontSize: 11, color: 'var(--text-muted)' }}>{e.car_model.replace(/_/g, ' ')}</td>
-                <td style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                <td style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                  {e.car_model.replace(/_/g, ' ')}
+                </td>
+                <td style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
                   {new Date(e.completed_at).toLocaleDateString()}
                 </td>
               </tr>
@@ -83,26 +166,6 @@ export default function Leaderboard() {
           </tbody>
         </table>
       </div>
-
-      {/* Track stats grid */}
-      {selectedTrack && tracks.length > 0 && (() => {
-        const t = tracks.find(t => t.track === selectedTrack);
-        if (!t) return null;
-        return (
-          <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
-            {[
-              { label: 'Total Laps', value: t.lap_count },
-              { label: 'Track Record', value: formatLapTime(t.fastest_ms) },
-              { label: 'Record Holder', value: t.fastest_driver },
-            ].map(stat => (
-              <div key={stat.label} className="card" style={{ padding: '12px 16px', flex: 1 }}>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{stat.label}</div>
-                <div className={stat.label === 'Track Record' ? 'mono' : ''} style={{ fontWeight: 700, fontSize: 16, color: 'var(--accent)' }}>{stat.value}</div>
-              </div>
-            ))}
-          </div>
-        );
-      })()}
     </div>
   );
 }

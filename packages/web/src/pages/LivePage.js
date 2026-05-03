@@ -21,5 +21,5 @@ export default function LivePage() {
         ac_status: data => store.onAcStatus(data),
         ping: () => store.setConnected(true),
     });
-    return (_jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: 24 }, children: [_jsxs("section", { children: [_jsx("h2", { style: { fontWeight: 700, marginBottom: 16, fontSize: 15, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }, children: "Now Racing" }), _jsx(NowRacing, {})] }), _jsxs("section", { children: [_jsx("h2", { style: { fontWeight: 700, marginBottom: 16, fontSize: 15, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }, children: "Recent Laps" }), _jsx("div", { className: "card", children: _jsx(LapFeed, {}) })] })] }));
+    return (_jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: 24 }, children: [_jsxs("section", { children: [_jsx("div", { className: "section-label", children: "Now Racing" }), _jsx(NowRacing, {})] }), _jsxs("section", { children: [_jsx("div", { className: "section-label", children: "Recent Laps" }), _jsx("div", { className: "card", children: _jsx(LapFeed, {}) })] })] }));
 }

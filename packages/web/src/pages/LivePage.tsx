@@ -28,17 +28,13 @@ export default function LivePage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       {/* Now Racing */}
       <section>
-        <h2 style={{ fontWeight: 700, marginBottom: 16, fontSize: 15, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-          Now Racing
-        </h2>
+        <div className="section-label">Now Racing</div>
         <NowRacing />
       </section>
 
       {/* Lap Feed */}
       <section>
-        <h2 style={{ fontWeight: 700, marginBottom: 16, fontSize: 15, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-          Recent Laps
-        </h2>
+        <div className="section-label">Recent Laps</div>
         <div className="card">
           <LapFeed />
         </div>

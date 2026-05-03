@@ -1,70 +1,77 @@
 import { LiveDriver } from '../../store/liveStore';
 import { formatLapTime } from '../../api/client';
 
-export default function DriverCard({ driver, rank, leaderBestMs }: { driver: LiveDriver; rank: number; leaderBestMs: number }) {
+export default function DriverCard({ driver, rank, leaderBestMs }: {
+  driver: LiveDriver; rank: number; leaderBestMs: number;
+}) {
   const gap = driver.bestLapMs - leaderBestMs;
   const isLeader = gap === 0;
+  const hasTime = driver.bestLapMs !== Infinity;
 
   return (
     <div style={{
-      background: isLeader
-        ? 'linear-gradient(135deg, #1a0000 0%, #0f0000 60%, #0a0000 100%)'
-        : 'linear-gradient(135deg, #111 0%, #0b0b0b 100%)',
-      border: `1px solid ${isLeader ? '#440000' : '#222'}`,
-      borderTop: `1px solid ${isLeader ? '#880000' : '#333'}`,
-      borderLeft: `3px solid ${isLeader ? 'var(--accent)' : '#222'}`,
-      borderRadius: 4,
-      padding: '14px 16px',
-      minWidth: 210,
-      position: 'relative',
-      overflow: 'hidden',
-      boxShadow: isLeader ? '0 0 20px rgba(204,0,0,0.15)' : 'none',
+      background: isLeader ? '#0f0000' : 'var(--bg-surface)',
+      border: `1px solid ${isLeader ? '#330000' : 'var(--border)'}`,
+      borderLeft: `4px solid ${isLeader ? 'var(--accent)' : 'var(--border)'}`,
+      borderRadius: 6,
+      padding: '16px 18px',
+      minWidth: 220,
+      cursor: 'pointer',
     }}>
-      {/* Top red stripe */}
-      {isLeader && (
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, var(--accent), transparent)' }} />
-      )}
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+      {/* Rank + laps */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
         <span style={{
           fontFamily: 'var(--font-display)',
-          fontSize: 20,
-          fontWeight: 900,
-          letterSpacing: '-0.02em',
-          color: isLeader ? 'var(--accent)' : '#333',
+          fontSize: 28, fontWeight: 900,
+          color: isLeader ? 'var(--accent)' : '#2a2a2a',
           lineHeight: 1,
         }}>
-          P{rank}
+          {rank}
         </span>
-        <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}>
-          {driver.lapCount} LAPS
+        <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
+          {driver.lapCount} lap{driver.lapCount !== 1 ? 's' : ''}
         </span>
       </div>
 
-      <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 15, letterSpacing: '0.02em', color: 'var(--text-primary)' }}>
+      {/* Name */}
+      <div style={{
+        fontSize: 16, fontWeight: 700,
+        color: 'var(--text-primary)',
+        marginBottom: 8,
+        letterSpacing: '0.01em',
+      }}>
         {driver.name}
       </div>
 
+      {/* Time */}
       <div style={{
-        fontFamily: 'var(--font-display)',
-        fontSize: 20,
-        fontWeight: 800,
-        color: isLeader ? 'var(--accent-hot)' : 'var(--chrome-light)',
-        textShadow: isLeader ? '0 0 16px rgba(255,32,32,0.5)' : 'none',
+        fontFamily: 'var(--font-mono)',
+        fontSize: 22, fontWeight: 700,
+        color: isLeader ? 'var(--accent-hot)' : 'var(--text-primary)',
         letterSpacing: '0.02em',
-        marginBottom: 4,
+        marginBottom: hasTime && !isLeader ? 4 : 0,
       }}>
-        {driver.bestLapMs === Infinity ? '--:--.---' : formatLapTime(driver.bestLapMs)}
+        {hasTime ? formatLapTime(driver.bestLapMs) : '--:--.---'}
       </div>
 
-      {!isLeader && driver.bestLapMs !== Infinity && (
-        <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+      {/* Gap */}
+      {!isLeader && hasTime && (
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)' }}>
           +{formatLapTime(gap)}
         </div>
       )}
-      {isLeader && <div style={{ fontSize: 10, color: 'var(--accent)', fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }}>LEADER</div>}
+      {isLeader && (
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)', letterSpacing: '0.06em' }}>
+          LEADER
+        </div>
+      )}
 
-      <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid #222', fontSize: 11, color: 'var(--text-muted)', letterSpacing: '0.03em' }}>
+      {/* Car */}
+      <div style={{
+        marginTop: 10, paddingTop: 8,
+        borderTop: '1px solid var(--border)',
+        fontSize: 11, color: 'var(--text-muted)',
+      }}>
         {driver.carModel.replace(/_/g, ' ')}
       </div>
     </div>

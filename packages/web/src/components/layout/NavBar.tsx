@@ -25,29 +25,28 @@ export default function NavBar() {
 
   return (
     <header style={{
-      background: 'linear-gradient(180deg, #141414 0%, #0a0a0a 100%)',
-      borderBottom: '1px solid #2a2a2a',
+      background: 'var(--bg-surface)',
+      borderBottom: '1px solid var(--border)',
       padding: '0 32px',
       display: 'flex',
       alignItems: 'center',
       gap: 8,
-      height: 56,
+      height: 54,
       position: 'sticky',
       top: 0,
       zIndex: 100,
-      boxShadow: '0 2px 20px rgba(0,0,0,0.8)',
     }}>
-      {/* Red/accent stripe at top */}
+      {/* Accent stripe */}
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0, height: 2,
-        background: `linear-gradient(90deg, transparent 0%, ${accentColor} 30%, ${accentColor}cc 50%, ${accentColor} 70%, transparent 100%)`,
+        background: accentColor,
         transition: 'background 0.4s',
       }} />
 
       {/* Logo */}
-      <span style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 17, marginRight: 24, letterSpacing: '0.08em', userSelect: 'none' }}>
+      <span style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 16, marginRight: 24, letterSpacing: '0.06em', userSelect: 'none' }}>
         <span className="chrome">LAP</span>
-        <span style={{ color: 'var(--accent)', textShadow: '0 0 12px var(--accent)66', transition: 'color 0.4s, text-shadow 0.4s' }}>TRACKER</span>
+        <span style={{ color: 'var(--accent)', transition: 'color 0.4s' }}>TRACKER</span>
         <span style={{ color: 'var(--text-muted)', fontSize: 11, marginLeft: 4 }}>9000</span>
       </span>
 
@@ -59,15 +58,11 @@ export default function NavBar() {
           { to: '/drivers', label: 'Drivers', end: false },
         ].map(({ to, label, end }) => (
           <NavLink key={to} to={to} end={end} style={({ isActive }) => ({
-            padding: '5px 16px',
-            fontFamily: 'var(--font-display)',
-            fontWeight: 600,
-            fontSize: 11,
-            letterSpacing: '0.1em',
-            color: isActive ? '#fff' : 'var(--text-muted)',
-            background: isActive ? `linear-gradient(180deg, ${accentColor}22 0%, ${accentColor}11 100%)` : 'transparent',
+            padding: '6px 14px',
+            fontSize: 13, fontWeight: 600,
+            color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
             borderBottom: isActive ? `2px solid var(--accent)` : '2px solid transparent',
-            transition: 'all 0.15s',
+            transition: 'color 0.15s',
             textDecoration: 'none',
             display: 'block',
           })}>
@@ -115,12 +110,11 @@ export default function NavBar() {
             onClick={() => setPickerOpen(o => !o)}
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
-              padding: '4px 10px',
-              background: pickerOpen ? `${accentColor}22` : 'var(--bg-elevated)',
-              border: `1px solid ${selected ? accentColor + '88' : '#333'}`,
-              borderRadius: 0,
+              padding: '5px 10px',
+              background: 'var(--bg-elevated)',
+              border: `1px solid ${selected ? accentColor + '66' : 'var(--border-bright)'}`,
+              borderRadius: 3,
               cursor: 'pointer',
-              transition: 'all 0.15s',
               height: 32,
             }}
           >

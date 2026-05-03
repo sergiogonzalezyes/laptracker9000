@@ -21,36 +21,31 @@ export default function NavBar() {
     }, []);
     const accentColor = selected?.color ?? '#cc0000';
     return (_jsxs("header", { style: {
-            background: 'linear-gradient(180deg, #141414 0%, #0a0a0a 100%)',
-            borderBottom: '1px solid #2a2a2a',
+            background: 'var(--bg-surface)',
+            borderBottom: '1px solid var(--border)',
             padding: '0 32px',
             display: 'flex',
             alignItems: 'center',
             gap: 8,
-            height: 56,
+            height: 54,
             position: 'sticky',
             top: 0,
             zIndex: 100,
-            boxShadow: '0 2px 20px rgba(0,0,0,0.8)',
         }, children: [_jsx("div", { style: {
                     position: 'absolute', top: 0, left: 0, right: 0, height: 2,
-                    background: `linear-gradient(90deg, transparent 0%, ${accentColor} 30%, ${accentColor}cc 50%, ${accentColor} 70%, transparent 100%)`,
+                    background: accentColor,
                     transition: 'background 0.4s',
-                } }), _jsxs("span", { style: { fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 17, marginRight: 24, letterSpacing: '0.08em', userSelect: 'none' }, children: [_jsx("span", { className: "chrome", children: "LAP" }), _jsx("span", { style: { color: 'var(--accent)', textShadow: '0 0 12px var(--accent)66', transition: 'color 0.4s, text-shadow 0.4s' }, children: "TRACKER" }), _jsx("span", { style: { color: 'var(--text-muted)', fontSize: 11, marginLeft: 4 }, children: "9000" })] }), _jsx("nav", { style: { display: 'flex', gap: 2 }, children: [
+                } }), _jsxs("span", { style: { fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 16, marginRight: 24, letterSpacing: '0.06em', userSelect: 'none' }, children: [_jsx("span", { className: "chrome", children: "LAP" }), _jsx("span", { style: { color: 'var(--accent)', transition: 'color 0.4s' }, children: "TRACKER" }), _jsx("span", { style: { color: 'var(--text-muted)', fontSize: 11, marginLeft: 4 }, children: "9000" })] }), _jsx("nav", { style: { display: 'flex', gap: 2 }, children: [
                     { to: '/live', label: 'Live', end: false },
                     { to: '/history', label: 'History', end: false },
                     { to: '/leaderboard', label: 'Leaderboard', end: false },
                     { to: '/drivers', label: 'Drivers', end: false },
                 ].map(({ to, label, end }) => (_jsx(NavLink, { to: to, end: end, style: ({ isActive }) => ({
-                        padding: '5px 16px',
-                        fontFamily: 'var(--font-display)',
-                        fontWeight: 600,
-                        fontSize: 11,
-                        letterSpacing: '0.1em',
-                        color: isActive ? '#fff' : 'var(--text-muted)',
-                        background: isActive ? `linear-gradient(180deg, ${accentColor}22 0%, ${accentColor}11 100%)` : 'transparent',
+                        padding: '6px 14px',
+                        fontSize: 13, fontWeight: 600,
+                        color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
                         borderBottom: isActive ? `2px solid var(--accent)` : '2px solid transparent',
-                        transition: 'all 0.15s',
+                        transition: 'color 0.15s',
                         textDecoration: 'none',
                         display: 'block',
                     }), children: label }, to))) }), _jsxs("div", { style: { marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }, children: [acStatus && acStatus.clients > 0 && (_jsxs("span", { className: "tag", children: [_jsx("span", { className: "dot dot-red" }), acStatus.clients, " ON TRACK"] })), _jsxs("div", { ref: pickerRef, style: { position: 'relative', display: 'flex', alignItems: 'center', gap: 0 }, children: [selected && (_jsx("button", { onClick: () => navigate(`/drivers/${encodeURIComponent(selected.name)}`), title: "Go to your profile", style: {
@@ -65,12 +60,11 @@ export default function NavBar() {
                                     transition: 'box-shadow 0.15s',
                                 }, onMouseEnter: e => (e.currentTarget.style.boxShadow = `0 0 10px ${selected.color}88`), onMouseLeave: e => (e.currentTarget.style.boxShadow = 'none'), children: selected.name.slice(0, 2).toUpperCase() })), _jsxs("button", { onClick: () => setPickerOpen(o => !o), style: {
                                     display: 'flex', alignItems: 'center', gap: 8,
-                                    padding: '4px 10px',
-                                    background: pickerOpen ? `${accentColor}22` : 'var(--bg-elevated)',
-                                    border: `1px solid ${selected ? accentColor + '88' : '#333'}`,
-                                    borderRadius: 0,
+                                    padding: '5px 10px',
+                                    background: 'var(--bg-elevated)',
+                                    border: `1px solid ${selected ? accentColor + '66' : 'var(--border-bright)'}`,
+                                    borderRadius: 3,
                                     cursor: 'pointer',
-                                    transition: 'all 0.15s',
                                     height: 32,
                                 }, children: [selected ? (_jsx("span", { style: { fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-primary)' }, children: selected.name.toUpperCase() })) : (_jsx("span", { style: { fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-muted)' }, children: "WHO ARE YOU?" })), _jsx("span", { style: { fontSize: 8, color: 'var(--text-muted)' }, children: "\u25BC" })] }), pickerOpen && (_jsxs("div", { style: {
                                     position: 'absolute', right: 0, top: '100%', marginTop: 4,

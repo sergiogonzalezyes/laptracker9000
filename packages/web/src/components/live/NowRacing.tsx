@@ -23,17 +23,14 @@ export default function NowRacing({ focusedDriver, onFocus }: Props) {
     if (sortMode === 'count') return b.lapCount - a.lapCount;
     return a.name.localeCompare(b.name);
   });
-  const leaderBestMs = [...drivers.values()].sort((a, b) => a.bestLapMs - b.bestLapMs)[0]?.bestLapMs ?? Infinity;
+  const leaderBestMs = [...drivers.values()]
+    .sort((a, b) => a.bestLapMs - b.bestLapMs)[0]?.bestLapMs ?? Infinity;
 
   if (!isActive && sorted.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--text-muted)' }}>
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: 48, fontWeight: 900, marginBottom: 12, color: '#1a1a1a' }}>⏱</div>
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: '#2a2a2a', letterSpacing: '0.15em' }}>
-          NO ACTIVE SESSION
-        </div>
-        <div style={{ fontSize: 12, marginTop: 8, color: '#333', letterSpacing: '0.05em' }}>
-          Server is offline or no laps in progress
+      <div style={{ padding: '60px 0', textAlign: 'center' }}>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500, letterSpacing: '0.06em' }}>
+          No active session — server is offline or no laps in progress
         </div>
       </div>
     );
@@ -42,48 +39,43 @@ export default function NowRacing({ focusedDriver, onFocus }: Props) {
   return (
     <div>
       {/* Session header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
         <span className={`badge badge-${sessionType.toLowerCase()}`}>{sessionType || 'PRACTICE'}</span>
-        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 22, letterSpacing: '0.05em' }}>
-          {trackDisplayName(track).toUpperCase()}
+        <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+          {trackDisplayName(track)}
         </span>
         {acStatus?.name && (
-          <span style={{ color: 'var(--text-muted)', fontSize: 12, fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>
-            {acStatus.name}
-          </span>
+          <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{acStatus.name}</span>
         )}
         {(acStatus?.clients ?? 0) > 0 && (
           <span className="tag" style={{ marginLeft: 'auto' }}>
             <span className="dot dot-red" />
-            {acStatus!.clients} ON TRACK
+            {acStatus!.clients} on track
           </span>
         )}
       </div>
 
-      {/* Sort + filter controls */}
+      {/* Sort controls */}
       {sorted.length > 0 && (
-        <div style={{ display: 'flex', gap: 6, marginBottom: 12, alignItems: 'center' }}>
-          <span style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: '0.1em', marginRight: 4 }}>SORT</span>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 14, alignItems: 'center' }}>
           {(['lap', 'count', 'alpha'] as SortMode[]).map(m => (
             <button key={m} onClick={() => setSortMode(m)} style={{
-              fontFamily: 'var(--font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em',
-              padding: '3px 10px',
-              background: sortMode === m ? 'rgba(204,0,0,0.2)' : 'transparent',
+              fontSize: 11, fontWeight: 600, padding: '4px 12px',
+              background: sortMode === m ? 'var(--accent-dim)' : 'transparent',
               color: sortMode === m ? 'var(--accent-hot)' : 'var(--text-muted)',
-              border: `1px solid ${sortMode === m ? '#440000' : '#222'}`,
-              borderRadius: 0,
+              border: `1px solid ${sortMode === m ? '#440000' : 'var(--border)'}`,
+              borderRadius: 3,
             }}>
-              {m === 'lap' ? 'BEST LAP' : m === 'count' ? 'LAP COUNT' : 'NAME'}
+              {m === 'lap' ? 'Best Lap' : m === 'count' ? 'Lap Count' : 'Name'}
             </button>
           ))}
           {focusedDriver && (
             <button onClick={() => onFocus(null)} style={{
-              marginLeft: 'auto', fontFamily: 'var(--font-display)', fontSize: 9, fontWeight: 700,
-              letterSpacing: '0.1em', padding: '3px 10px',
-              background: 'rgba(204,0,0,0.1)', color: 'var(--accent-hot)',
-              border: '1px solid #440000', borderRadius: 0,
+              marginLeft: 'auto', fontSize: 11, fontWeight: 600, padding: '4px 12px',
+              background: 'var(--accent-dim)', color: 'var(--accent-hot)',
+              border: '1px solid #440000', borderRadius: 3,
             }}>
-              ✕ CLEAR FILTER
+              ✕ {focusedDriver}
             </button>
           )}
         </div>
@@ -93,16 +85,20 @@ export default function NowRacing({ focusedDriver, onFocus }: Props) {
       {sorted.length > 0 ? (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
           {sorted.map((d, i) => (
-            <div key={d.name} onClick={() => onFocus(focusedDriver === d.name ? null : d.name)}
-              style={{ cursor: 'pointer', outline: focusedDriver === d.name ? `2px solid var(--accent)` : '2px solid transparent', borderRadius: 4 }}>
+            <div
+              key={d.name}
+              onClick={() => onFocus(focusedDriver === d.name ? null : d.name)}
+              style={{
+                outline: focusedDriver === d.name ? '2px solid var(--accent)' : '2px solid transparent',
+                borderRadius: 6,
+              }}
+            >
               <DriverCard driver={d} rank={i + 1} leaderBestMs={leaderBestMs} />
             </div>
           ))}
         </div>
       ) : (
-        <div style={{ color: 'var(--text-muted)', fontSize: 12, fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }}>
-          WAITING FOR DRIVERS...
-        </div>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Waiting for drivers...</div>
       )}
     </div>
   );

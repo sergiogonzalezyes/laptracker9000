@@ -1,8 +1,24 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
+import { useState, useRef, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useLiveStore } from '../../store/liveStore';
+import { useDriverTheme } from '../../hooks/useDriverTheme';
 export default function NavBar() {
     const { isConnected, acStatus } = useLiveStore();
+    const { drivers, selected, selectDriver } = useDriverTheme();
+    const [pickerOpen, setPickerOpen] = useState(false);
+    const pickerRef = useRef(null);
+    // Close picker on outside click
+    useEffect(() => {
+        const handler = (e) => {
+            if (pickerRef.current && !pickerRef.current.contains(e.target)) {
+                setPickerOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+    const accentColor = selected?.color ?? '#cc0000';
     return (_jsxs("header", { style: {
             background: 'linear-gradient(180deg, #141414 0%, #0a0a0a 100%)',
             borderBottom: '1px solid #2a2a2a',
@@ -15,7 +31,11 @@ export default function NavBar() {
             top: 0,
             zIndex: 100,
             boxShadow: '0 2px 20px rgba(0,0,0,0.8)',
-        }, children: [_jsx("div", { style: { position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent 0%, #cc0000 30%, #ff2020 50%, #cc0000 70%, transparent 100%)' } }), _jsxs("span", { style: { fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 17, marginRight: 24, letterSpacing: '0.08em', userSelect: 'none' }, children: [_jsx("span", { className: "chrome", children: "LAP" }), _jsx("span", { style: { color: 'var(--accent)', textShadow: '0 0 12px rgba(204,0,0,0.6)' }, children: "TRACKER" }), _jsx("span", { style: { color: 'var(--text-muted)', fontSize: 11, marginLeft: 4 }, children: "9000" })] }), _jsx("nav", { style: { display: 'flex', gap: 2 }, children: [
+        }, children: [_jsx("div", { style: {
+                    position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+                    background: `linear-gradient(90deg, transparent 0%, ${accentColor} 30%, ${accentColor}cc 50%, ${accentColor} 70%, transparent 100%)`,
+                    transition: 'background 0.4s',
+                } }), _jsxs("span", { style: { fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 17, marginRight: 24, letterSpacing: '0.08em', userSelect: 'none' }, children: [_jsx("span", { className: "chrome", children: "LAP" }), _jsx("span", { style: { color: 'var(--accent)', textShadow: '0 0 12px var(--accent)66', transition: 'color 0.4s, text-shadow 0.4s' }, children: "TRACKER" }), _jsx("span", { style: { color: 'var(--text-muted)', fontSize: 11, marginLeft: 4 }, children: "9000" })] }), _jsx("nav", { style: { display: 'flex', gap: 2 }, children: [
                     { to: '/', label: 'Live', end: true },
                     { to: '/history', label: 'History', end: false },
                     { to: '/leaderboard', label: 'Leaderboard', end: false },
@@ -27,10 +47,51 @@ export default function NavBar() {
                         fontSize: 11,
                         letterSpacing: '0.1em',
                         color: isActive ? '#fff' : 'var(--text-muted)',
-                        background: isActive ? 'linear-gradient(180deg, #1e0000 0%, #110000 100%)' : 'transparent',
-                        borderBottom: isActive ? '2px solid var(--accent)' : '2px solid transparent',
+                        background: isActive ? `linear-gradient(180deg, ${accentColor}22 0%, ${accentColor}11 100%)` : 'transparent',
+                        borderBottom: isActive ? `2px solid var(--accent)` : '2px solid transparent',
                         transition: 'all 0.15s',
                         textDecoration: 'none',
                         display: 'block',
-                    }), children: label }, to))) }), _jsxs("div", { style: { marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }, children: [acStatus && acStatus.clients > 0 && (_jsxs("span", { className: "tag", children: [_jsx("span", { className: "dot dot-red" }), acStatus.clients, " ON TRACK"] })), _jsxs("span", { style: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontFamily: 'var(--font-display)', letterSpacing: '0.1em', color: 'var(--text-muted)' }, children: [_jsx("span", { className: `dot ${isConnected ? 'dot-green' : 'dot-grey'}` }), isConnected ? 'LIVE' : 'CONNECTING'] })] })] }));
+                    }), children: label }, to))) }), _jsxs("div", { style: { marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }, children: [acStatus && acStatus.clients > 0 && (_jsxs("span", { className: "tag", children: [_jsx("span", { className: "dot dot-red" }), acStatus.clients, " ON TRACK"] })), _jsxs("div", { ref: pickerRef, style: { position: 'relative' }, children: [_jsxs("button", { onClick: () => setPickerOpen(o => !o), style: {
+                                    display: 'flex', alignItems: 'center', gap: 8,
+                                    padding: '4px 10px',
+                                    background: pickerOpen ? `${accentColor}22` : 'var(--bg-elevated)',
+                                    border: `1px solid ${selected ? accentColor + '88' : '#333'}`,
+                                    borderRadius: 0,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s',
+                                }, children: [selected ? (_jsxs(_Fragment, { children: [_jsx("div", { style: {
+                                                    width: 20, height: 20, borderRadius: 2, flexShrink: 0,
+                                                    background: `radial-gradient(circle at 35% 35%, ${selected.color}cc, ${selected.color}66)`,
+                                                    border: `1px solid ${selected.color}`,
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 9, color: '#fff',
+                                                }, children: selected.name.slice(0, 2).toUpperCase() }), _jsx("span", { style: { fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-primary)' }, children: selected.name.toUpperCase() })] })) : (_jsx("span", { style: { fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-muted)' }, children: "WHO ARE YOU?" })), _jsx("span", { style: { fontSize: 8, color: 'var(--text-muted)', marginLeft: 2 }, children: "\u25BC" })] }), pickerOpen && (_jsxs("div", { style: {
+                                    position: 'absolute', right: 0, top: '100%', marginTop: 4,
+                                    background: '#0f0f0f',
+                                    border: '1px solid #2a2a2a',
+                                    borderTop: `2px solid var(--accent)`,
+                                    minWidth: 180, zIndex: 200,
+                                    boxShadow: '0 8px 32px rgba(0,0,0,0.8)',
+                                }, children: [drivers.map(d => (_jsxs("button", { onClick: () => { selectDriver(d); setPickerOpen(false); }, style: {
+                                            display: 'flex', alignItems: 'center', gap: 10,
+                                            width: '100%', padding: '10px 14px',
+                                            background: selected?.name === d.name ? `${d.color}18` : 'transparent',
+                                            borderBottom: '1px solid #1a1a1a',
+                                            borderLeft: selected?.name === d.name ? `2px solid ${d.color}` : '2px solid transparent',
+                                            cursor: 'pointer', textAlign: 'left',
+                                            transition: 'background 0.1s',
+                                        }, onMouseEnter: e => (e.currentTarget.style.background = `${d.color}18`), onMouseLeave: e => (e.currentTarget.style.background = selected?.name === d.name ? `${d.color}18` : 'transparent'), children: [_jsx("div", { style: {
+                                                    width: 28, height: 28, borderRadius: 2, flexShrink: 0,
+                                                    background: `radial-gradient(circle at 35% 35%, ${d.color}cc, ${d.color}55)`,
+                                                    border: `1px solid ${d.color}`,
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 11, color: '#fff',
+                                                    textShadow: '0 1px 4px rgba(0,0,0,0.8)',
+                                                }, children: d.name.slice(0, 2).toUpperCase() }), _jsxs("div", { children: [_jsx("div", { style: { fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-primary)' }, children: d.name }), d.tagline && (_jsx("div", { style: { fontSize: 9, color: 'var(--text-muted)', marginTop: 1 }, children: d.tagline }))] }), selected?.name === d.name && (_jsx("span", { style: { marginLeft: 'auto', fontSize: 10, color: d.color }, children: "\u2713" }))] }, d.name))), selected && (_jsx("button", { onClick: () => { selectDriver(null); setPickerOpen(false); }, style: {
+                                            width: '100%', padding: '8px 14px', textAlign: 'center',
+                                            fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: '0.1em',
+                                            color: '#444', cursor: 'pointer', background: 'transparent',
+                                            borderTop: '1px solid #1a1a1a',
+                                        }, children: "RESET THEME" })), drivers.length === 0 && (_jsx("div", { style: { padding: '12px 14px', fontSize: 10, color: '#333', fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }, children: "NO DRIVERS YET" }))] }))] }), _jsxs("span", { style: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontFamily: 'var(--font-display)', letterSpacing: '0.1em', color: 'var(--text-muted)' }, children: [_jsx("span", { className: `dot ${isConnected ? 'dot-green' : 'dot-grey'}` }), isConnected ? 'LIVE' : 'CONNECTING'] })] })] }));
 }

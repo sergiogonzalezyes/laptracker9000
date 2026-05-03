@@ -1,8 +1,26 @@
+import { useState, useRef, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useLiveStore } from '../../store/liveStore';
+import { useDriverTheme } from '../../hooks/useDriverTheme';
 
 export default function NavBar() {
   const { isConnected, acStatus } = useLiveStore();
+  const { drivers, selected, selectDriver } = useDriverTheme();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  // Close picker on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setPickerOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const accentColor = selected?.color ?? '#cc0000';
 
   return (
     <header style={{
@@ -18,13 +36,17 @@ export default function NavBar() {
       zIndex: 100,
       boxShadow: '0 2px 20px rgba(0,0,0,0.8)',
     }}>
-      {/* Red stripe at very top */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent 0%, #cc0000 30%, #ff2020 50%, #cc0000 70%, transparent 100%)' }} />
+      {/* Red/accent stripe at top */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+        background: `linear-gradient(90deg, transparent 0%, ${accentColor} 30%, ${accentColor}cc 50%, ${accentColor} 70%, transparent 100%)`,
+        transition: 'background 0.4s',
+      }} />
 
       {/* Logo */}
       <span style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 17, marginRight: 24, letterSpacing: '0.08em', userSelect: 'none' }}>
         <span className="chrome">LAP</span>
-        <span style={{ color: 'var(--accent)', textShadow: '0 0 12px rgba(204,0,0,0.6)' }}>TRACKER</span>
+        <span style={{ color: 'var(--accent)', textShadow: '0 0 12px var(--accent)66', transition: 'color 0.4s, text-shadow 0.4s' }}>TRACKER</span>
         <span style={{ color: 'var(--text-muted)', fontSize: 11, marginLeft: 4 }}>9000</span>
       </span>
 
@@ -42,8 +64,8 @@ export default function NavBar() {
             fontSize: 11,
             letterSpacing: '0.1em',
             color: isActive ? '#fff' : 'var(--text-muted)',
-            background: isActive ? 'linear-gradient(180deg, #1e0000 0%, #110000 100%)' : 'transparent',
-            borderBottom: isActive ? '2px solid var(--accent)' : '2px solid transparent',
+            background: isActive ? `linear-gradient(180deg, ${accentColor}22 0%, ${accentColor}11 100%)` : 'transparent',
+            borderBottom: isActive ? `2px solid var(--accent)` : '2px solid transparent',
             transition: 'all 0.15s',
             textDecoration: 'none',
             display: 'block',
@@ -53,7 +75,7 @@ export default function NavBar() {
         ))}
       </nav>
 
-      {/* Status */}
+      {/* Right side */}
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
         {acStatus && acStatus.clients > 0 && (
           <span className="tag">
@@ -61,6 +83,116 @@ export default function NavBar() {
             {acStatus.clients} ON TRACK
           </span>
         )}
+
+        {/* Driver picker */}
+        <div ref={pickerRef} style={{ position: 'relative' }}>
+          <button
+            onClick={() => setPickerOpen(o => !o)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '4px 10px',
+              background: pickerOpen ? `${accentColor}22` : 'var(--bg-elevated)',
+              border: `1px solid ${selected ? accentColor + '88' : '#333'}`,
+              borderRadius: 0,
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+          >
+            {selected ? (
+              <>
+                <div style={{
+                  width: 20, height: 20, borderRadius: 2, flexShrink: 0,
+                  background: `radial-gradient(circle at 35% 35%, ${selected.color}cc, ${selected.color}66)`,
+                  border: `1px solid ${selected.color}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 9, color: '#fff',
+                }}>
+                  {selected.name.slice(0, 2).toUpperCase()}
+                </div>
+                <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-primary)' }}>
+                  {selected.name.toUpperCase()}
+                </span>
+              </>
+            ) : (
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-muted)' }}>
+                WHO ARE YOU?
+              </span>
+            )}
+            <span style={{ fontSize: 8, color: 'var(--text-muted)', marginLeft: 2 }}>▼</span>
+          </button>
+
+          {/* Dropdown */}
+          {pickerOpen && (
+            <div style={{
+              position: 'absolute', right: 0, top: '100%', marginTop: 4,
+              background: '#0f0f0f',
+              border: '1px solid #2a2a2a',
+              borderTop: `2px solid var(--accent)`,
+              minWidth: 180, zIndex: 200,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.8)',
+            }}>
+              {drivers.map(d => (
+                <button
+                  key={d.name}
+                  onClick={() => { selectDriver(d); setPickerOpen(false); }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    width: '100%', padding: '10px 14px',
+                    background: selected?.name === d.name ? `${d.color}18` : 'transparent',
+                    borderBottom: '1px solid #1a1a1a',
+                    borderLeft: selected?.name === d.name ? `2px solid ${d.color}` : '2px solid transparent',
+                    cursor: 'pointer', textAlign: 'left',
+                    transition: 'background 0.1s',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = `${d.color}18`)}
+                  onMouseLeave={e => (e.currentTarget.style.background = selected?.name === d.name ? `${d.color}18` : 'transparent')}
+                >
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 2, flexShrink: 0,
+                    background: `radial-gradient(circle at 35% 35%, ${d.color}cc, ${d.color}55)`,
+                    border: `1px solid ${d.color}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 11, color: '#fff',
+                    textShadow: '0 1px 4px rgba(0,0,0,0.8)',
+                  }}>
+                    {d.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-primary)' }}>
+                      {d.name}
+                    </div>
+                    {d.tagline && (
+                      <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 1 }}>{d.tagline}</div>
+                    )}
+                  </div>
+                  {selected?.name === d.name && (
+                    <span style={{ marginLeft: 'auto', fontSize: 10, color: d.color }}>✓</span>
+                  )}
+                </button>
+              ))}
+              {selected && (
+                <button
+                  onClick={() => { selectDriver(null); setPickerOpen(false); }}
+                  style={{
+                    width: '100%', padding: '8px 14px', textAlign: 'center',
+                    fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: '0.1em',
+                    color: '#444', cursor: 'pointer', background: 'transparent',
+                    borderTop: '1px solid #1a1a1a',
+                  }}
+                >
+                  RESET THEME
+                </button>
+              )}
+              {drivers.length === 0 && (
+                <div style={{ padding: '12px 14px', fontSize: 10, color: '#333', fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }}>
+                  NO DRIVERS YET
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Live indicator */}
         <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontFamily: 'var(--font-display)', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>
           <span className={`dot ${isConnected ? 'dot-green' : 'dot-grey'}`} />
           {isConnected ? 'LIVE' : 'CONNECTING'}

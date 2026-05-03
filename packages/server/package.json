@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc && node -e \"require('fs').cpSync('src/db/schema.sql','dist/db/schema.sql')\"",
-    "start": "npm run build && node dist/index.js"
+    "start": "npm run build && node dist/index.js",
+    "serve": "node dist/index.js"
   },
   "dependencies": {
     "chokidar": "^3.6.0",

@@ -67,10 +67,12 @@
       "Bash(curl -s -X POST http://localhost:3001/api/ingest/lap -H 'Content-Type: application/json' -H 'x-agent-token: 647e70982028cabd75bc45635da5cb9f3b357078cfbcd6d3' -d '{\"driverName\":\"test\",\"track\":\"test\",\"lapTimeMs\":60000}')",
       "Bash(node -e ' *)",
       "Read(//c/Users/Sergio/.ssh/**)",
-      "Bash(gh --version)"
+      "Bash(gh --version)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://laps.gvtsy.com/api/leaderboard/tracks)"
     ],
     "additionalDirectories": [
-      "C:\\Users\\Sergio\\Documents\\Github\\apex-watcher"
+      "C:\\Users\\Sergio\\Documents\\Github\\apex-watcher",
+      "C:\\Users\\Sergio\\AppData\\Roaming\\laptracker-agent"
     ]
   }
 }

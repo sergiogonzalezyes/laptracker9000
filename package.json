@@ -2,7 +2,9 @@
   "name": "laptracker9000",
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/server",
+    "packages/web",
+    "packages/agent"
   ],
   "scripts": {
     "dev": "concurrently -n server,web -c cyan,magenta \"npm run dev -w @laptracker/server\" \"npm run dev -w @laptracker/web\"",

@@ -72,7 +72,11 @@
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Sergio\\\\Documents\\\\LapTracker9000\\\\packages\\\\web\\\\src\\\\\" -Recurse -Include \"*.tsx\", \"*.ts\", \"*.css\" | Select-Object -ExpandProperty FullName)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(curl -s \"https://laps.gvtsy.com/api/live\" --max-time 3)",
+      "Bash(curl -sv \"https://laps.gvtsy.com/api/live\" --max-time 3)",
+      "Bash(curl -s https://laps.gvtsy.com/api/drivers)",
+      "Bash(curl -s --max-time 5 https://laps.gvtsy.com/api/drivers)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Sergio\\Documents\\Github\\apex-watcher",

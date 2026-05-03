@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useSSE } from '../hooks/useSSE';
 import { useLiveStore } from '../store/liveStore';
 import { api } from '../api/client';
 import NowRacing from '../components/live/NowRacing';
@@ -14,7 +13,6 @@ export default function LivePage() {
     api.activeSession().then(s => s && store.setCurrentSession(s));
   }, []);
 
-  // Esc clears driver focus
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setFocusedDriver(null);
@@ -22,16 +20,6 @@ export default function LivePage() {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, []);
-
-  useSSE('/api/live', {
-    session_start: data => { store.onSessionStart(data as Parameters<typeof store.onSessionStart>[0]); store.setConnected(true); },
-    session_end:   data => store.onSessionEnd(data as Parameters<typeof store.onSessionEnd>[0]),
-    lap_completed: data => store.onLapCompleted(data as Parameters<typeof store.onLapCompleted>[0]),
-    driver_joined: data => store.onDriverJoined(data as Parameters<typeof store.onDriverJoined>[0]),
-    driver_left:   data => store.onDriverLeft(data as Parameters<typeof store.onDriverLeft>[0]),
-    ac_status:     data => store.onAcStatus(data as Parameters<typeof store.onAcStatus>[0]),
-    ping:          ()   => store.setConnected(true),
-  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>

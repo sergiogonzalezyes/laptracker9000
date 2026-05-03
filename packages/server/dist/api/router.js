@@ -1,0 +1,17 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.apiRouter = void 0;
+const express_1 = require("express");
+const sessions_1 = require("./sessions");
+const laps_1 = require("./laps");
+const leaderboard_1 = require("./leaderboard");
+const live_1 = require("./live");
+const ingest_1 = require("./ingest");
+const drivers_1 = require("./drivers");
+exports.apiRouter = (0, express_1.Router)();
+exports.apiRouter.use('/sessions', sessions_1.sessionsRouter);
+exports.apiRouter.use('/laps', laps_1.lapsRouter);
+exports.apiRouter.use('/leaderboard', leaderboard_1.leaderboardRouter);
+exports.apiRouter.use('/live', live_1.liveRouter);
+exports.apiRouter.use('/ingest', ingest_1.ingestRouter);
+exports.apiRouter.use('/drivers', drivers_1.driversRouter);

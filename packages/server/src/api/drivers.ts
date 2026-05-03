@@ -85,6 +85,34 @@ driversRouter.get('/:name', (req, res) => {
   res.json({ ...driver, stats, favCar: favCar?.car_model ?? '', trackBests, recentSessions });
 });
 
+// Driver lap history for a specific track — for progression charts
+driversRouter.get('/:name/track-history', (req, res) => {
+  const db = getDb();
+  const { name } = req.params;
+  const { track } = req.query as { track?: string };
+
+  const driver = db.prepare('SELECT id FROM drivers WHERE name = ?').get(name) as { id: number } | undefined;
+  if (!driver) return res.status(404).json({ error: 'Driver not found' });
+
+  const rows = db.prepare(`
+    SELECT s.id, s.track, s.session_type, s.started_at,
+           MIN(CASE WHEN l.valid = 1 THEN l.lap_time_ms END) AS best_ms,
+           (SELECT l2.car_model FROM laps l2
+            WHERE l2.session_id = s.id AND l2.driver_id = ? AND l2.valid = 1
+            ORDER BY l2.lap_time_ms ASC LIMIT 1) AS best_car,
+           COUNT(l.id) AS lap_count
+    FROM sessions s
+    JOIN laps l ON l.session_id = s.id
+    WHERE l.driver_id = ?
+    ${track ? 'AND s.track = ?' : ''}
+    GROUP BY s.id
+    HAVING best_ms IS NOT NULL
+    ORDER BY s.started_at ASC
+  `).all(...(track ? [driver.id, driver.id, track] : [driver.id, driver.id]));
+
+  res.json(rows);
+});
+
 // Claim an unclaimed driver — sets PIN + initial profile
 driversRouter.post('/:name/claim', (req, res) => {
   const db = getDb();

@@ -95,6 +95,10 @@ export const api = {
   drivers:       ()             => get<DriverStats[]>('/leaderboard/drivers'),
   allDrivers:    ()             => get<DriverSummary[]>('/drivers'),
   driverProfile: (name: string) => get<DriverProfile>(`/drivers/${encodeURIComponent(name)}`),
+  driverTrackHistory: (name: string, track: string) =>
+    get<{ id: number; track: string; session_type: string; started_at: string; best_ms: number; best_car: string; lap_count: number }[]>(
+      `/drivers/${encodeURIComponent(name)}/track-history?track=${encodeURIComponent(track)}`
+    ),
   updateDriverProfile: (name: string, pin: string, color: string, tagline: string) =>
     fetch(`/api/drivers/${encodeURIComponent(name)}/profile`, {
       method: 'PUT',

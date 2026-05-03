@@ -15,6 +15,7 @@ export const api = {
     drivers: () => get('/leaderboard/drivers'),
     allDrivers: () => get('/drivers'),
     driverProfile: (name) => get(`/drivers/${encodeURIComponent(name)}`),
+    driverTrackHistory: (name, track) => get(`/drivers/${encodeURIComponent(name)}/track-history?track=${encodeURIComponent(track)}`),
     updateDriverProfile: (name, pin, color, tagline) => fetch(`/api/drivers/${encodeURIComponent(name)}/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },

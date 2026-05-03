@@ -5,6 +5,78 @@ import { useDriverTheme } from '../hooks/useDriverTheme';
 import { useIsMobile } from '../hooks/useBreakpoint';
 import SessionProgressChart from '../components/charts/SessionProgressChart';
 
+// ── Progression section with track + car selectors ───────────────────────────
+function ProgressionSection({ driverName, trackBests, color }: {
+  driverName: string;
+  trackBests: { track: string; best_ms: number; car_model: string }[];
+  color: string;
+}) {
+  const [selectedTrack, setSelectedTrack] = useState(trackBests[0]?.track ?? '');
+  const [selectedCar, setSelectedCar] = useState('');
+  const [sessions, setSessions] = useState<{ id: number; track: string; session_type: string; started_at: string; best_ms: number; best_car: string; lap_count: number }[]>([]);
+
+  useEffect(() => {
+    if (!selectedTrack) return;
+    api.driverTrackHistory(driverName, selectedTrack).then(data => {
+      setSessions(data);
+      setSelectedCar(''); // reset car filter when track changes
+    });
+  }, [selectedTrack, driverName]);
+
+  const cars = [...new Set(sessions.map(s => s.best_car).filter(Boolean))];
+  const filtered = selectedCar ? sessions.filter(s => s.best_car === selectedCar) : sessions;
+
+  if (filtered.length < 2) return null;
+
+  return (
+    <div className="card" style={{ padding: '14px 16px 10px' }}>
+      {/* Header + selectors */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', flexShrink: 0 }}>
+          Progression
+        </div>
+
+        {/* Track selector */}
+        <div style={{ position: 'relative' }}>
+          <select
+            value={selectedTrack}
+            onChange={e => setSelectedTrack(e.target.value)}
+            style={{ fontSize: 12, fontWeight: 600, paddingRight: 24, paddingLeft: 10, height: 28 }}
+          >
+            {trackBests.map(t => (
+              <option key={t.track} value={t.track}>{trackDisplayName(t.track)}</option>
+            ))}
+          </select>
+          <span style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none', fontSize: 9 }}>▼</span>
+        </div>
+
+        {/* Car selector — only if multiple cars */}
+        {cars.length > 1 && (
+          <div style={{ position: 'relative' }}>
+            <select
+              value={selectedCar}
+              onChange={e => setSelectedCar(e.target.value)}
+              style={{ fontSize: 12, paddingRight: 24, paddingLeft: 10, height: 28 }}
+            >
+              <option value="">All Cars</option>
+              {cars.map(c => (
+                <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>
+              ))}
+            </select>
+            <span style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none', fontSize: 9 }}>▼</span>
+          </div>
+        )}
+
+        <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>
+          {filtered.length} session{filtered.length !== 1 ? 's' : ''}
+        </span>
+      </div>
+
+      <SessionProgressChart sessions={filtered} height={130} accentColor={color} />
+    </div>
+  );
+}
+
 export default function DriverPage() {
   const { name } = useParams<{ name: string }>();
   const { me, refreshColor } = useDriverTheme();
@@ -203,14 +275,9 @@ export default function DriverPage() {
         </div>
       </div>
 
-      {/* Session progression chart */}
-      {recentSessions.filter(s => s.best_ms).length >= 2 && (
-        <div className="card" style={{ padding: '14px 16px 10px' }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>
-            Session Progression
-          </div>
-          <SessionProgressChart sessions={recentSessions} height={130} accentColor={color} />
-        </div>
+      {/* Session progression chart — track-specific */}
+      {trackBests.length > 0 && (
+        <ProgressionSection driverName={decodedName} trackBests={trackBests} color={color} />
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>

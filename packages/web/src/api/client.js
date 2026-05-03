@@ -13,6 +13,13 @@ export const api = {
     leaderboard: (params = '') => get(`/leaderboard${params}`),
     tracks: () => get('/leaderboard/tracks'),
     drivers: () => get('/leaderboard/drivers'),
+    allDrivers: () => get('/drivers'),
+    driverProfile: (name) => get(`/drivers/${encodeURIComponent(name)}`),
+    updateDriverProfile: (name, color, tagline) => fetch(`/api/drivers/${encodeURIComponent(name)}/profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ color, tagline }),
+    }),
 };
 // ── Format helpers ──────────────────────────────────────────────────────────
 export function formatLapTime(ms) {

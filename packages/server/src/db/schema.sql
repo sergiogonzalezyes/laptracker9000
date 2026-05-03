@@ -40,6 +40,12 @@ CREATE TABLE IF NOT EXISTS ingested_files (
   line_count  INTEGER NOT NULL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS driver_profiles (
+  driver_id INTEGER PRIMARY KEY REFERENCES drivers(id),
+  color     TEXT NOT NULL DEFAULT '#cc0000',
+  tagline   TEXT NOT NULL DEFAULT ''
+);
+
 CREATE INDEX IF NOT EXISTS idx_laps_session    ON laps(session_id);
 CREATE INDEX IF NOT EXISTS idx_laps_driver     ON laps(driver_id);
 CREATE INDEX IF NOT EXISTS idx_laps_valid      ON laps(valid, lap_time_ms);

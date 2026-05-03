@@ -20,15 +20,16 @@ function LapRow({ lap, isNew }) {
                         ? _jsx("span", { style: { color: 'var(--green)', fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }, children: "PB" })
                         : null })] }));
 }
-export default function LapFeed() {
+export default function LapFeed({ filterDriver }) {
     const { recentLaps } = useLiveStore();
     const topRef = useRef(null);
     const now = Date.now();
     useEffect(() => {
         topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, [recentLaps.length]);
-    if (recentLaps.length === 0) {
+    const laps = filterDriver ? recentLaps.filter(l => l.driverName === filterDriver) : recentLaps;
+    if (laps.length === 0) {
         return (_jsx("div", { style: { padding: '50px 16px', textAlign: 'center', color: '#1e1e1e', fontFamily: 'var(--font-display)', letterSpacing: '0.15em', fontSize: 12 }, children: "NO LAPS YET" }));
     }
-    return (_jsxs("div", { style: { overflowY: 'auto', maxHeight: 520 }, children: [_jsx("div", { ref: topRef }), _jsxs("table", { children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { children: "#" }), _jsx("th", { children: "Driver" }), _jsx("th", { children: "Time" }), _jsx("th", { children: "S1" }), _jsx("th", { children: "S2" }), _jsx("th", { children: "Car" }), _jsx("th", {})] }) }), _jsx("tbody", { children: recentLaps.slice(0, 40).map(lap => (_jsx(LapRow, { lap: lap, isNew: now - lap.timestamp < 2000 }, lap.id))) })] })] }));
+    return (_jsxs("div", { style: { overflowY: 'auto', maxHeight: 520 }, children: [_jsx("div", { ref: topRef }), _jsxs("table", { children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { children: "#" }), _jsx("th", { children: "Driver" }), _jsx("th", { children: "Time" }), _jsx("th", { children: "S1" }), _jsx("th", { children: "S2" }), _jsx("th", { children: "Car" }), _jsx("th", {})] }) }), _jsx("tbody", { children: laps.slice(0, 40).map(lap => (_jsx(LapRow, { lap: lap, isNew: now - lap.timestamp < 2000 }, lap.id))) })] })] }));
 }

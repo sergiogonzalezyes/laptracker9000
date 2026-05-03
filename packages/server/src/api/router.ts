@@ -4,6 +4,7 @@ import { lapsRouter } from './laps';
 import { leaderboardRouter } from './leaderboard';
 import { liveRouter } from './live';
 import { ingestRouter } from './ingest';
+import { driversRouter } from './drivers';
 
 export const apiRouter = Router();
 
@@ -12,3 +13,4 @@ apiRouter.use('/laps',        lapsRouter);
 apiRouter.use('/leaderboard', leaderboardRouter);
 apiRouter.use('/live',        liveRouter);
 apiRouter.use('/ingest',      ingestRouter);
+apiRouter.use('/drivers',     driversRouter);

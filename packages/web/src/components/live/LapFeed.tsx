@@ -42,7 +42,7 @@ function LapRow({ lap, isNew }: { lap: LiveLap; isNew: boolean }) {
   );
 }
 
-export default function LapFeed() {
+export default function LapFeed({ filterDriver }: { filterDriver?: string | null }) {
   const { recentLaps } = useLiveStore();
   const topRef = useRef<HTMLDivElement>(null);
   const now = Date.now();
@@ -51,7 +51,9 @@ export default function LapFeed() {
     topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [recentLaps.length]);
 
-  if (recentLaps.length === 0) {
+  const laps = filterDriver ? recentLaps.filter(l => l.driverName === filterDriver) : recentLaps;
+
+  if (laps.length === 0) {
     return (
       <div style={{ padding: '50px 16px', textAlign: 'center', color: '#1e1e1e', fontFamily: 'var(--font-display)', letterSpacing: '0.15em', fontSize: 12 }}>
         NO LAPS YET
@@ -69,7 +71,7 @@ export default function LapFeed() {
           </tr>
         </thead>
         <tbody>
-          {recentLaps.slice(0, 40).map(lap => (
+          {laps.slice(0, 40).map(lap => (
             <LapRow key={lap.id} lap={lap} isNew={now - lap.timestamp < 2000} />
           ))}
         </tbody>

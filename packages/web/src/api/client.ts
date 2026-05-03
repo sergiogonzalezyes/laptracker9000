@@ -62,14 +62,43 @@ export interface DriverStats {
   track_count: number;
 }
 
+export interface DriverSummary {
+  name: string;
+  total_laps: number;
+  valid_laps: number;
+  best_lap_ms: number | null;
+  track_count: number;
+  color: string;
+  tagline: string;
+}
+
+export interface DriverProfile {
+  id: number;
+  name: string;
+  color: string;
+  tagline: string;
+  favCar: string;
+  stats: { total_laps: number; valid_laps: number; best_lap_ms: number | null; track_count: number };
+  trackBests: { track: string; best_ms: number; car_model: string }[];
+  recentSessions: { id: number; track: string; session_type: string; started_at: string; best_ms: number | null; lap_count: number }[];
+}
+
 export const api = {
-  sessions:    (params = '') => get<{ sessions: Session[]; total: number }>(`/sessions${params}`),
-  session:     (id: number) => get<Session & { laps: Lap[] }>(`/sessions/${id}`),
-  activeSession: ()          => get<Session | null>('/sessions/active'),
-  recentLaps:  (limit = 50) => get<Lap[]>(`/laps/recent?limit=${limit}`),
-  leaderboard: (params = '') => get<LeaderboardEntry[]>(`/leaderboard${params}`),
-  tracks:      ()            => get<TrackSummary[]>('/leaderboard/tracks'),
-  drivers:     ()            => get<DriverStats[]>('/leaderboard/drivers'),
+  sessions:      (params = '')  => get<{ sessions: Session[]; total: number }>(`/sessions${params}`),
+  session:       (id: number)   => get<Session & { laps: Lap[] }>(`/sessions/${id}`),
+  activeSession: ()             => get<Session | null>('/sessions/active'),
+  recentLaps:    (limit = 50)   => get<Lap[]>(`/laps/recent?limit=${limit}`),
+  leaderboard:   (params = '')  => get<LeaderboardEntry[]>(`/leaderboard${params}`),
+  tracks:        ()             => get<TrackSummary[]>('/leaderboard/tracks'),
+  drivers:       ()             => get<DriverStats[]>('/leaderboard/drivers'),
+  allDrivers:    ()             => get<DriverSummary[]>('/drivers'),
+  driverProfile: (name: string) => get<DriverProfile>(`/drivers/${encodeURIComponent(name)}`),
+  updateDriverProfile: (name: string, color: string, tagline: string) =>
+    fetch(`/api/drivers/${encodeURIComponent(name)}/profile`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ color, tagline }),
+    }),
 };
 
 // ── Format helpers ──────────────────────────────────────────────────────────

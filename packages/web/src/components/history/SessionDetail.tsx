@@ -52,7 +52,11 @@ export default function SessionDetail() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                   <span style={{ fontWeight: 600 }}>
                     <span style={{ color: 'var(--text-muted)', marginRight: 8, fontSize: 12 }}>P{i + 1}</span>
-                    {s.name}
+                    <Link to={`/drivers/${encodeURIComponent(s.name)}`} style={{ color: 'inherit', textDecoration: 'none' }}
+                      onMouseEnter={e => (e.currentTarget.style.color = 'var(--accent-hot)')}
+                      onMouseLeave={e => (e.currentTarget.style.color = 'inherit')}>
+                      {s.name}
+                    </Link>
                   </span>
                   <span className="mono" style={{ color: i === 0 ? 'var(--accent)' : 'var(--text-primary)', fontWeight: 700 }}>
                     {s.best?.valid === 1 ? formatLapTime(s.best.lap_time_ms) : '—'}
@@ -80,7 +84,13 @@ export default function SessionDetail() {
                 {session.laps.map(lap => (
                   <tr key={lap.id}>
                     <td style={{ color: 'var(--text-muted)', fontSize: 11 }}>{lap.lap_number}</td>
-                    <td style={{ fontWeight: 500 }}>{lap.driver_name}</td>
+                    <td style={{ fontWeight: 500 }}>
+                      <Link to={`/drivers/${encodeURIComponent(lap.driver_name)}`} style={{ color: 'inherit', textDecoration: 'none' }}
+                        onMouseEnter={e => (e.currentTarget.style.color = 'var(--accent-hot)')}
+                        onMouseLeave={e => (e.currentTarget.style.color = 'inherit')}>
+                        {lap.driver_name}
+                      </Link>
+                    </td>
                     <td className={`mono ${lap.valid === 1 ? (lap.lap_time_ms === bestMs ? 'lap-session' : '') : 'lap-invalid'}`}
                         style={{ fontWeight: 700, fontSize: 14 }}>
                       {formatLapTime(lap.lap_time_ms)}

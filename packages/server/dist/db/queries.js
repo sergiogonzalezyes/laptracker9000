@@ -105,7 +105,7 @@ function getLeaderboard(db, opts) {
     const where = 'WHERE ' + conditions.join(' AND ');
     return db.prepare(`
     SELECT d.name as driver_name, l.car_model, MIN(l.lap_time_ms) as lap_time_ms,
-           l.split1_ms, l.split2_ms, l.session_id, l.completed_at
+           l.split1_ms, l.split2_ms, l.split3_ms, l.session_id, l.completed_at
     FROM laps l
     JOIN drivers d ON l.driver_id = d.id
     JOIN sessions s ON l.session_id = s.id

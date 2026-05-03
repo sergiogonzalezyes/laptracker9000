@@ -42,6 +42,7 @@ export interface LeaderboardEntry {
   lap_time_ms: number;
   split1_ms: number | null;
   split2_ms: number | null;
+  split3_ms: number | null;
   session_id: number;
   completed_at: string;
 }

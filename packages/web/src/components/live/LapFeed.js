@@ -55,6 +55,7 @@ export default function LapFeed({ filterDriver }) {
     // Per-driver best sectors
     const driverBestS1 = new Map();
     const driverBestS2 = new Map();
+    const driverBestS3 = new Map();
     for (const l of laps) {
         if (!l.valid)
             continue;
@@ -62,6 +63,8 @@ export default function LapFeed({ filterDriver }) {
             driverBestS1.set(l.driverName, Math.min(driverBestS1.get(l.driverName) ?? Infinity, l.split1Ms));
         if (l.split2Ms)
             driverBestS2.set(l.driverName, Math.min(driverBestS2.get(l.driverName) ?? Infinity, l.split2Ms));
+        if (l.split3Ms)
+            driverBestS3.set(l.driverName, Math.min(driverBestS3.get(l.driverName) ?? Infinity, l.split3Ms));
     }
     // Session best lap
     const sessionBestMs = Math.min(...laps.filter(l => l.valid).map(l => l.lapTimeMs).filter(Boolean), Infinity);
@@ -70,7 +73,11 @@ export default function LapFeed({ filterDriver }) {
     const avgMs = validLaps.length ? validLaps.reduce((s, l) => s + l.lapTimeMs, 0) / validLaps.length : 0;
     const bestS1 = Math.min(...laps.filter(l => l.valid && l.split1Ms).map(l => l.split1Ms), Infinity);
     const bestS2 = Math.min(...laps.filter(l => l.valid && l.split2Ms).map(l => l.split2Ms), Infinity);
-    const theoreticalBest = bestS1 !== Infinity && bestS2 !== Infinity ? bestS1 + bestS2 : null;
+    const bestS3 = Math.min(...laps.filter(l => l.valid && l.split3Ms).map(l => l.split3Ms), Infinity);
+    const hasS3 = bestS3 !== Infinity;
+    const theoreticalBest = bestS1 !== Infinity && bestS2 !== Infinity
+        ? bestS1 + bestS2 + (hasS3 ? bestS3 : 0)
+        : null;
     const stdDev = validLaps.length > 1
         ? Math.sqrt(validLaps.map(l => (l.lapTimeMs - avgMs) ** 2).reduce((a, b) => a + b, 0) / validLaps.length)
         : null;
@@ -87,13 +94,14 @@ export default function LapFeed({ filterDriver }) {
                             { label: 'THEORY BEST', value: theoreticalBest ? formatLapTime(theoreticalBest) : '—', highlight: false },
                             { label: 'CONSISTENCY', value: stdDev ? `±${(stdDev / 1000).toFixed(2)}s` : '—', highlight: false },
                             { label: 'VALID LAPS', value: `${validLaps.length} / ${laps.length}`, highlight: false },
-                        ].map(s => (_jsxs("div", { style: { flex: 1, padding: '10px 12px', borderRight: '1px solid var(--border)', textAlign: 'center', position: 'relative', overflow: 'hidden' }, children: [s.highlight && _jsx("div", { style: { position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, var(--accent), transparent)', opacity: 0.5 } }), _jsx("div", { style: { fontSize: 8, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: '0.12em', marginBottom: 4 }, children: s.label }), _jsx("div", { style: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, color: s.highlight ? 'var(--accent-hot)' : 'var(--chrome-light)', letterSpacing: '0.03em' }, children: s.value })] }, s.label))) })), _jsx("div", { ref: topRef }), _jsx("div", { className: "table-scroll", children: _jsxs("table", { style: { minWidth: 560 }, children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { style: { width: 20 } }), _jsx("th", { style: { width: 28 }, children: "#" }), _jsx("th", { children: "DRIVER" }), _jsx("th", { children: "TIME" }), _jsx("th", { children: "DELTA" }), _jsx("th", { children: "S1" }), _jsx("th", { children: "S2" }), _jsx("th", { children: "CAR" })] }) }), _jsx("tbody", { children: displayLaps.map((lap, idx) => {
+                        ].map(s => (_jsxs("div", { style: { flex: 1, padding: '10px 12px', borderRight: '1px solid var(--border)', textAlign: 'center', position: 'relative', overflow: 'hidden' }, children: [s.highlight && _jsx("div", { style: { position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, var(--accent), transparent)', opacity: 0.5 } }), _jsx("div", { style: { fontSize: 8, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: '0.12em', marginBottom: 4 }, children: s.label }), _jsx("div", { style: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, color: s.highlight ? 'var(--accent-hot)' : 'var(--chrome-light)', letterSpacing: '0.03em' }, children: s.value })] }, s.label))) })), _jsx("div", { ref: topRef }), _jsx("div", { className: "table-scroll", children: _jsxs("table", { style: { minWidth: 560 }, children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { style: { width: 20 } }), _jsx("th", { style: { width: 28 }, children: "#" }), _jsx("th", { children: "DRIVER" }), _jsx("th", { children: "TIME" }), _jsx("th", { children: "DELTA" }), _jsx("th", { children: "S1" }), _jsx("th", { children: "S2" }), hasS3 && _jsx("th", { children: "S3" }), _jsx("th", { children: "CAR" })] }) }), _jsx("tbody", { children: displayLaps.map((lap, idx) => {
                                         const isNew = now - lap.timestamp < 2000;
                                         const pulseClass = isNew && lap.isPB ? 'lap-pulse' : isNew ? 'lap-new' : '';
                                         const timeClass = !lap.valid ? 'lap-invalid' : lap.isPB ? 'lap-pb' : lap.isSessionBest ? 'lap-session' : '';
                                         const trend = lapTrend(displayLaps, idx);
                                         const bestS1 = driverBestS1.get(lap.driverName) ?? Infinity;
                                         const bestS2 = driverBestS2.get(lap.driverName) ?? Infinity;
+                                        const bestS3d = driverBestS3.get(lap.driverName) ?? Infinity;
                                         return (_jsxs("tr", { className: pulseClass, children: [_jsx("td", { style: { width: 20, padding: '10px 4px' }, children: trend && _jsx("span", { style: { fontSize: 9, color: trend.color, fontWeight: 700 }, children: trend.sym }) }), _jsx("td", { style: { color: 'var(--text-muted)', fontSize: 10, fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }, children: lap.lapNumber || '—' }), _jsx("td", { style: { fontWeight: 600, fontSize: 13 }, children: _jsxs("span", { style: { display: 'flex', alignItems: 'center', gap: 8 }, children: [lap.driverName, !me && unclaimedNames.has(lap.driverName) && (_jsx("button", { onClick: () => setClaimTarget(lap.driverName), style: {
                                                                     fontFamily: 'var(--font-display)', fontSize: 8, fontWeight: 700,
                                                                     letterSpacing: '0.08em', padding: '2px 7px',
@@ -104,6 +112,6 @@ export default function LapFeed({ filterDriver }) {
                                                         fontFamily: 'var(--font-mono)', fontSize: 11,
                                                         color: !lap.valid ? 'var(--text-muted)' : lap.lapTimeMs === sessionBestMs ? 'var(--accent-hot)' : '#888',
                                                         fontWeight: lap.lapTimeMs === sessionBestMs ? 700 : 400,
-                                                    }, children: lap.valid ? formatDelta(lap.lapTimeMs, sessionBestMs) : '—' }), _jsx("td", { style: { fontFamily: 'var(--font-mono)', fontSize: 11, color: sectorColor(lap.split1Ms, bestS1) }, children: lap.split1Ms ? formatLapTime(lap.split1Ms) : '—' }), _jsx("td", { style: { fontFamily: 'var(--font-mono)', fontSize: 11, color: sectorColor(lap.split2Ms, bestS2) }, children: lap.split2Ms ? formatLapTime(lap.split2Ms) : '—' }), _jsx("td", { style: { fontSize: 10, color: 'var(--text-muted)' }, children: lap.carModel.replace(/_/g, ' ') })] }, lap.id));
+                                                    }, children: lap.valid ? formatDelta(lap.lapTimeMs, sessionBestMs) : '—' }), _jsx("td", { style: { fontFamily: 'var(--font-mono)', fontSize: 11, color: sectorColor(lap.split1Ms, bestS1) }, children: lap.split1Ms ? formatLapTime(lap.split1Ms) : '—' }), _jsx("td", { style: { fontFamily: 'var(--font-mono)', fontSize: 11, color: sectorColor(lap.split2Ms, bestS2) }, children: lap.split2Ms ? formatLapTime(lap.split2Ms) : '—' }), hasS3 && (_jsx("td", { style: { fontFamily: 'var(--font-mono)', fontSize: 11, color: sectorColor(lap.split3Ms, bestS3d) }, children: lap.split3Ms ? formatLapTime(lap.split3Ms) : '—' })), _jsx("td", { style: { fontSize: 10, color: 'var(--text-muted)' }, children: lap.carModel.replace(/_/g, ' ') })] }, lap.id));
                                     }) })] }) })] })] }));
 }

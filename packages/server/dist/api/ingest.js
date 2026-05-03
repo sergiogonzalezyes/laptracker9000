@@ -88,6 +88,7 @@ exports.ingestRouter.post('/lap', (req, res) => {
             carModel: carModel ?? '',
             split1Ms: split1_ms ?? null,
             split2Ms: split2_ms ?? null,
+            split3Ms: split3_ms ?? null,
         } });
     res.json({ lapId, sessionId });
 });

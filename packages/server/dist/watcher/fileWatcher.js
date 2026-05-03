@@ -198,6 +198,7 @@ function startWatcher(db, watchPath) {
                             carModel: lap.carModel,
                             split1Ms: lap.split1Ms,
                             split2Ms: lap.split2Ms,
+                            split3Ms: lap.split3Ms,
                         } });
                     console.log(`[lap] ${lap.driverName} ${(lap.lapTimeMs / 1000).toFixed(3)}s on ${ps.track} (${lap.valid ? 'valid' : 'INVALID'})`);
                 }

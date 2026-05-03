@@ -54,10 +54,12 @@ export default function LapFeed({ filterDriver }: { filterDriver?: string | null
   // Per-driver best sectors
   const driverBestS1 = new Map<string, number>();
   const driverBestS2 = new Map<string, number>();
+  const driverBestS3 = new Map<string, number>();
   for (const l of laps) {
     if (!l.valid) continue;
     if (l.split1Ms) driverBestS1.set(l.driverName, Math.min(driverBestS1.get(l.driverName) ?? Infinity, l.split1Ms));
     if (l.split2Ms) driverBestS2.set(l.driverName, Math.min(driverBestS2.get(l.driverName) ?? Infinity, l.split2Ms));
+    if (l.split3Ms) driverBestS3.set(l.driverName, Math.min(driverBestS3.get(l.driverName) ?? Infinity, l.split3Ms));
   }
 
   // Session best lap
@@ -68,7 +70,11 @@ export default function LapFeed({ filterDriver }: { filterDriver?: string | null
   const avgMs = validLaps.length ? validLaps.reduce((s, l) => s + l.lapTimeMs, 0) / validLaps.length : 0;
   const bestS1 = Math.min(...laps.filter(l => l.valid && l.split1Ms).map(l => l.split1Ms!), Infinity);
   const bestS2 = Math.min(...laps.filter(l => l.valid && l.split2Ms).map(l => l.split2Ms!), Infinity);
-  const theoreticalBest = bestS1 !== Infinity && bestS2 !== Infinity ? bestS1 + bestS2 : null;
+  const bestS3 = Math.min(...laps.filter(l => l.valid && l.split3Ms).map(l => l.split3Ms!), Infinity);
+  const hasS3 = bestS3 !== Infinity;
+  const theoreticalBest = bestS1 !== Infinity && bestS2 !== Infinity
+    ? bestS1 + bestS2 + (hasS3 ? bestS3 : 0)
+    : null;
   const stdDev = validLaps.length > 1
     ? Math.sqrt(validLaps.map(l => (l.lapTimeMs - avgMs) ** 2).reduce((a, b) => a + b, 0) / validLaps.length)
     : null;
@@ -128,6 +134,7 @@ export default function LapFeed({ filterDriver }: { filterDriver?: string | null
             <th>DELTA</th>
             <th>S1</th>
             <th>S2</th>
+            {hasS3 && <th>S3</th>}
             <th>CAR</th>
           </tr>
         </thead>
@@ -139,6 +146,7 @@ export default function LapFeed({ filterDriver }: { filterDriver?: string | null
             const trend = lapTrend(displayLaps, idx);
             const bestS1 = driverBestS1.get(lap.driverName) ?? Infinity;
             const bestS2 = driverBestS2.get(lap.driverName) ?? Infinity;
+            const bestS3d = driverBestS3.get(lap.driverName) ?? Infinity;
 
             return (
               <tr key={lap.id} className={pulseClass}>
@@ -183,6 +191,11 @@ export default function LapFeed({ filterDriver }: { filterDriver?: string | null
                 <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: sectorColor(lap.split2Ms, bestS2) }}>
                   {lap.split2Ms ? formatLapTime(lap.split2Ms) : '—'}
                 </td>
+                {hasS3 && (
+                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: sectorColor(lap.split3Ms, bestS3d) }}>
+                    {lap.split3Ms ? formatLapTime(lap.split3Ms) : '—'}
+                  </td>
+                )}
                 <td style={{ fontSize: 10, color: 'var(--text-muted)' }}>
                   {lap.carModel.replace(/_/g, ' ')}
                 </td>

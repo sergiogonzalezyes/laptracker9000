@@ -182,6 +182,7 @@ export default function Leaderboard() {
               <th>Gap</th>
               <th>S1</th>
               <th>S2</th>
+              <th>S3</th>
               <SortTh label="Car"  col="car_model"    sort={sort} dir={dir} onSort={handleSort} />
               <SortTh label="Date" col="completed_at" sort={sort} dir={dir} onSort={handleSort} />
             </tr>
@@ -254,6 +255,11 @@ export default function Leaderboard() {
                   {/* S2 */}
                   <td style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--text-muted)' }}>
                     {e.split2_ms ? formatLapTime(e.split2_ms) : '—'}
+                  </td>
+
+                  {/* S3 */}
+                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--text-muted)' }}>
+                    {e.split3_ms ? formatLapTime(e.split3_ms) : '—'}
                   </td>
 
                   {/* Car */}

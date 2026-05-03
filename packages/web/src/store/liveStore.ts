@@ -12,6 +12,7 @@ export interface LiveLap {
   carModel: string;
   split1Ms: number | null;
   split2Ms: number | null;
+  split3Ms: number | null;
   isPB: boolean;
   isSessionBest: boolean;
   timestamp: number;
@@ -44,7 +45,7 @@ interface LiveStore {
   setCurrentSession: (s: Session | null) => void;
   onSessionStart: (data: { sessionId: number; track: string; serverName: string; sessionType: string }) => void;
   onSessionEnd: (data: { sessionId: number }) => void;
-  onLapCompleted: (data: { sessionId: number; driverName: string; lapTimeMs: number; lapNumber: number; cuts: number; valid: boolean; carModel: string; split1Ms: number | null; split2Ms: number | null }) => void;
+  onLapCompleted: (data: { sessionId: number; driverName: string; lapTimeMs: number; lapNumber: number; cuts: number; valid: boolean; carModel: string; split1Ms: number | null; split2Ms: number | null; split3Ms?: number | null }) => void;
   onDriverJoined: (data: { driverName: string; carModel: string; carSlot: number }) => void;
   onDriverLeft: (data: { driverName: string }) => void;
   onAcStatus: (status: AcStatus) => void;
@@ -108,6 +109,7 @@ export const useLiveStore = create<LiveStore>((set, get) => ({
       carModel: data.carModel,
       split1Ms: data.split1Ms,
       split2Ms: data.split2Ms,
+      split3Ms: data.split3Ms ?? null,
       isPB,
       isSessionBest: sessionBest,
       timestamp: Date.now(),
@@ -149,6 +151,7 @@ export const useLiveStore = create<LiveStore>((set, get) => ({
       carModel: l.car_model,
       split1Ms: l.split1_ms,
       split2Ms: l.split2_ms,
+      split3Ms: l.split3_ms ?? null,
       isPB: false,
       isSessionBest: false,
       timestamp: new Date(l.completed_at).getTime(),

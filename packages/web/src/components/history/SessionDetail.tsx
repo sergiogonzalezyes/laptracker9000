@@ -34,13 +34,14 @@ interface DriverStats {
   stdDev: number | null;
   bestS1: number | null;
   bestS2: number | null;
+  bestS3: number | null;
   lapCount: number;
   validCount: number;
 }
 
 function calcDriverStats(laps: Lap[]): DriverStats {
   const valid = laps.filter(l => l.valid === 1);
-  if (valid.length === 0) return { best: null, avg: null, theoreticalBest: null, stdDev: null, bestS1: null, bestS2: null, lapCount: laps.length, validCount: 0 };
+  if (valid.length === 0) return { best: null, avg: null, theoreticalBest: null, stdDev: null, bestS1: null, bestS2: null, bestS3: null, lapCount: laps.length, validCount: 0 };
 
   const times = valid.map(l => l.lap_time_ms);
   const best = Math.min(...times);
@@ -51,11 +52,147 @@ function calcDriverStats(laps: Lap[]): DriverStats {
 
   const s1s = valid.filter(l => l.split1_ms).map(l => l.split1_ms!);
   const s2s = valid.filter(l => l.split2_ms).map(l => l.split2_ms!);
+  const s3s = valid.filter(l => l.split3_ms).map(l => l.split3_ms!);
   const bestS1 = s1s.length ? Math.min(...s1s) : null;
   const bestS2 = s2s.length ? Math.min(...s2s) : null;
-  const theoreticalBest = bestS1 && bestS2 ? bestS1 + bestS2 : null;
+  const bestS3 = s3s.length ? Math.min(...s3s) : null;
+  const theoreticalBest = bestS1 && bestS2 ? bestS1 + bestS2 + (bestS3 ?? 0) : null;
 
-  return { best, avg, theoreticalBest, stdDev, bestS1, bestS2, lapCount: laps.length, validCount: valid.length };
+  return { best, avg, theoreticalBest, stdDev, bestS1, bestS2, bestS3, lapCount: laps.length, validCount: valid.length };
+}
+
+// ── Head-to-Head component ───────────────────────────────────────────────────
+function HeadToHead({ standings, isMobile }: {
+  standings: { name: string; laps: Lap[]; stats: DriverStats }[];
+  isMobile: boolean;
+}) {
+  const [p1idx, setP1idx] = useState(0);
+  const [p2idx, setP2idx] = useState(1);
+
+  const p1 = standings[p1idx];
+  const p2 = standings[p2idx];
+  if (!p1 || !p2) return null;
+
+  // Shared laps: both drivers did the same lap number
+  const p1ByLap = new Map(p1.laps.map(l => [l.lap_number, l]));
+  const p2ByLap = new Map(p2.laps.map(l => [l.lap_number, l]));
+  const allLapNums = [...new Set([...p1ByLap.keys(), ...p2ByLap.keys()])].sort((a, b) => a - b);
+  const sharedLaps = allLapNums.filter(n => p1ByLap.has(n) && p2ByLap.has(n) && p1ByLap.get(n)!.valid === 1 && p2ByLap.get(n)!.valid === 1);
+
+  const p1Wins = sharedLaps.filter(n => p1ByLap.get(n)!.lap_time_ms < p2ByLap.get(n)!.lap_time_ms).length;
+  const p2Wins = sharedLaps.length - p1Wins;
+
+  const p1Best = p1.stats.best;
+  const p2Best = p2.stats.best;
+  const gap = p1Best && p2Best ? Math.abs(p1Best - p2Best) : null;
+  const faster = p1Best && p2Best ? (p1Best <= p2Best ? p1.name : p2.name) : null;
+
+  return (
+    <div className="card" style={{ marginBottom: 16, padding: '16px 20px' }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
+        Head to Head
+        {/* Driver selectors if 3+ */}
+        {standings.length > 2 && (
+          <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
+            <select value={p1idx} onChange={e => setP1idx(+e.target.value)} style={{ fontSize: 11, padding: '3px 8px', height: 26 }}>
+              {standings.map((s, i) => i !== p2idx && <option key={i} value={i}>{s.name}</option>)}
+            </select>
+            <span style={{ color: 'var(--text-muted)', alignSelf: 'center' }}>vs</span>
+            <select value={p2idx} onChange={e => setP2idx(+e.target.value)} style={{ fontSize: 11, padding: '3px 8px', height: 26 }}>
+              {standings.map((s, i) => i !== p1idx && <option key={i} value={i}>{s.name}</option>)}
+            </select>
+          </div>
+        )}
+      </div>
+
+      {/* Summary bar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: sharedLaps.length > 0 ? 16 : 0 }}>
+        {/* P1 */}
+        <div style={{ flex: 1, textAlign: 'left' }}>
+          <Link to={`/drivers/${encodeURIComponent(p1.name)}`} style={{ fontSize: 16, fontWeight: 700, color: p1.name === faster ? 'var(--accent-hot)' : 'var(--text-primary)', textDecoration: 'none' }}>
+            {p1.name}
+          </Link>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 700, color: p1.name === faster ? 'var(--accent-hot)' : 'var(--text-primary)', marginTop: 4 }}>
+            {p1Best ? formatLapTime(p1Best) : '—'}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{p1.stats.lapCount} laps</div>
+        </div>
+
+        {/* Middle: gap + shared lap wins */}
+        <div style={{ textAlign: 'center', padding: '0 20px', flexShrink: 0 }}>
+          {gap && (
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--text-muted)', marginBottom: 4 }}>
+              {`+${(gap / 1000).toFixed(3)}`}
+            </div>
+          )}
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>vs</div>
+          {sharedLaps.length > 0 && (
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+              <span style={{ color: p1Wins > p2Wins ? 'var(--green)' : 'var(--text-muted)', fontWeight: 700 }}>{p1Wins}</span>
+              <span style={{ margin: '0 4px' }}>–</span>
+              <span style={{ color: p2Wins > p1Wins ? 'var(--green)' : 'var(--text-muted)', fontWeight: 700 }}>{p2Wins}</span>
+              <div style={{ fontSize: 10, color: '#444', marginTop: 2 }}>shared laps</div>
+            </div>
+          )}
+        </div>
+
+        {/* P2 */}
+        <div style={{ flex: 1, textAlign: 'right' }}>
+          <Link to={`/drivers/${encodeURIComponent(p2.name)}`} style={{ fontSize: 16, fontWeight: 700, color: p2.name === faster ? 'var(--accent-hot)' : 'var(--text-primary)', textDecoration: 'none' }}>
+            {p2.name}
+          </Link>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 700, color: p2.name === faster ? 'var(--accent-hot)' : 'var(--text-primary)', marginTop: 4 }}>
+            {p2Best ? formatLapTime(p2Best) : '—'}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{p2.stats.lapCount} laps</div>
+        </div>
+      </div>
+
+      {/* Lap-by-lap shared laps */}
+      {sharedLaps.length > 0 && (
+        <div className="table-scroll">
+          <table style={{ minWidth: 380 }}>
+            <thead>
+              <tr>
+                <th style={{ width: 40 }}>LAP</th>
+                <th>{p1.name}</th>
+                <th style={{ width: 80, textAlign: 'center' }}>GAP</th>
+                <th style={{ textAlign: 'right' }}>{p2.name}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sharedLaps.map(n => {
+                const l1 = p1ByLap.get(n)!;
+                const l2 = p2ByLap.get(n)!;
+                const d = l1.lap_time_ms - l2.lap_time_ms;
+                const p1faster = d < 0;
+                return (
+                  <tr key={n}>
+                    <td style={{ color: 'var(--text-muted)', fontSize: 12 }}>{n}</td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: p1faster ? 700 : 400, color: p1faster ? 'var(--green)' : 'var(--text-secondary)' }}>
+                      {formatLapTime(l1.lap_time_ms)}
+                    </td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)', textAlign: 'center' }}>
+                      {d === 0 ? 'dead heat' : `${p1faster ? '' : '+'}${(d / 1000).toFixed(3)}`}
+                    </td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: !p1faster ? 700 : 400, color: !p1faster ? 'var(--green)' : 'var(--text-secondary)', textAlign: 'right' }}>
+                      {formatLapTime(l2.lap_time_ms)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {sharedLaps.length === 0 && (
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '8px 0' }}>
+          No shared valid lap numbers in this session
+        </div>
+      )}
+    </div>
+  );
 }
 
 function StatCell({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
@@ -101,6 +238,7 @@ export default function SessionDetail() {
   }).sort((a, b) => (a.stats.best ?? Infinity) - (b.stats.best ?? Infinity));
 
   const leaderBest = standings[0]?.stats.best ?? null;
+  const driverNames = standings.map(s => s.name);
 
   // Focus driver data
   const focusLaps = focusDriver ? (byDriver.get(focusDriver) ?? session.laps) : session.laps;
@@ -123,6 +261,11 @@ export default function SessionDetail() {
           {new Date(session.started_at).toLocaleString()}
         </span>
       </div>
+
+      {/* Head-to-Head — only when 2+ drivers */}
+      {driverNames.length >= 2 && (
+        <HeadToHead standings={standings} isMobile={isMobile} />
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '260px 1fr', gap: 16 }}>
         {/* Standings sidebar */}
@@ -226,6 +369,7 @@ export default function SessionDetail() {
                   <th>DELTA</th>
                   <th>S1</th>
                   <th>S2</th>
+                  <th>S3</th>
                   <th>CAR</th>
                   <th>STATUS</th>
                 </tr>
@@ -272,6 +416,9 @@ export default function SessionDetail() {
                       </td>
                       <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: sectorColor(lap.split2_ms, driverStats.bestS2) }}>
                         {lap.split2_ms ? formatLapTime(lap.split2_ms) : '—'}
+                      </td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: sectorColor(lap.split3_ms, driverStats.bestS3) }}>
+                        {lap.split3_ms ? formatLapTime(lap.split3_ms) : '—'}
                       </td>
                       <td style={{ fontSize: 10, color: 'var(--text-muted)' }}>{lap.car_model.replace(/_/g, ' ')}</td>
                       <td style={{ fontSize: 10 }}>

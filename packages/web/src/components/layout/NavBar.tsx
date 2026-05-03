@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useLiveStore } from '../../store/liveStore';
 import { useDriverTheme } from '../../hooks/useDriverTheme';
 
@@ -7,6 +7,7 @@ export default function NavBar() {
   const { isConnected, acStatus } = useLiveStore();
   const { drivers, selected, selectDriver } = useDriverTheme();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const navigate = useNavigate();
   const pickerRef = useRef<HTMLDivElement>(null);
 
   // Close picker on outside click
@@ -85,7 +86,31 @@ export default function NavBar() {
         )}
 
         {/* Driver picker */}
-        <div ref={pickerRef} style={{ position: 'relative' }}>
+        <div ref={pickerRef} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 0 }}>
+          {/* Avatar — navigates to profile */}
+          {selected && (
+            <button
+              onClick={() => navigate(`/drivers/${encodeURIComponent(selected.name)}`)}
+              title="Go to your profile"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: 32, height: 32,
+                background: `radial-gradient(circle at 35% 35%, ${selected.color}cc, ${selected.color}55)`,
+                border: `1px solid ${selected.color}`,
+                borderRight: 'none',
+                borderRadius: 0, cursor: 'pointer',
+                fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 11, color: '#fff',
+                textShadow: '0 1px 4px rgba(0,0,0,0.8)',
+                transition: 'box-shadow 0.15s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.boxShadow = `0 0 10px ${selected.color}88`)}
+              onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
+            >
+              {selected.name.slice(0, 2).toUpperCase()}
+            </button>
+          )}
+
+          {/* Name + dropdown toggle */}
           <button
             onClick={() => setPickerOpen(o => !o)}
             style={{
@@ -96,29 +121,19 @@ export default function NavBar() {
               borderRadius: 0,
               cursor: 'pointer',
               transition: 'all 0.15s',
+              height: 32,
             }}
           >
             {selected ? (
-              <>
-                <div style={{
-                  width: 20, height: 20, borderRadius: 2, flexShrink: 0,
-                  background: `radial-gradient(circle at 35% 35%, ${selected.color}cc, ${selected.color}66)`,
-                  border: `1px solid ${selected.color}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 9, color: '#fff',
-                }}>
-                  {selected.name.slice(0, 2).toUpperCase()}
-                </div>
-                <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-primary)' }}>
-                  {selected.name.toUpperCase()}
-                </span>
-              </>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-primary)' }}>
+                {selected.name.toUpperCase()}
+              </span>
             ) : (
               <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-muted)' }}>
                 WHO ARE YOU?
               </span>
             )}
-            <span style={{ fontSize: 8, color: 'var(--text-muted)', marginLeft: 2 }}>▼</span>
+            <span style={{ fontSize: 8, color: 'var(--text-muted)' }}>▼</span>
           </button>
 
           {/* Dropdown */}
@@ -171,17 +186,30 @@ export default function NavBar() {
                 </button>
               ))}
               {selected && (
-                <button
-                  onClick={() => { selectDriver(null); setPickerOpen(false); }}
-                  style={{
-                    width: '100%', padding: '8px 14px', textAlign: 'center',
-                    fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: '0.1em',
-                    color: '#444', cursor: 'pointer', background: 'transparent',
-                    borderTop: '1px solid #1a1a1a',
-                  }}
-                >
-                  RESET THEME
-                </button>
+                <div style={{ borderTop: '1px solid #1a1a1a' }}>
+                  <button
+                    onClick={() => { navigate(`/drivers/${encodeURIComponent(selected.name)}`); setPickerOpen(false); }}
+                    style={{
+                      width: '100%', padding: '9px 14px', textAlign: 'left',
+                      fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: '0.08em',
+                      color: 'var(--accent-hot)', cursor: 'pointer', background: 'transparent',
+                      display: 'flex', alignItems: 'center', gap: 8,
+                    }}
+                  >
+                    <span style={{ fontSize: 12 }}>✎</span> EDIT MY PROFILE
+                  </button>
+                  <button
+                    onClick={() => { selectDriver(null); setPickerOpen(false); }}
+                    style={{
+                      width: '100%', padding: '8px 14px', textAlign: 'center',
+                      fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: '0.1em',
+                      color: '#333', cursor: 'pointer', background: 'transparent',
+                      borderTop: '1px solid #111',
+                    }}
+                  >
+                    RESET THEME
+                  </button>
+                </div>
               )}
               {drivers.length === 0 && (
                 <div style={{ padding: '12px 14px', fontSize: 10, color: '#333', fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }}>

@@ -5,6 +5,7 @@ import LivePage from './pages/LivePage';
 import HistoryPage from './pages/HistoryPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import DriverPage from './pages/DriverPage';
+import DriversPageWrapper from './pages/DriversPageWrapper';
 import SessionDetail from './components/history/SessionDetail';
 
 function KeyboardShortcuts() {
@@ -14,6 +15,7 @@ function KeyboardShortcuts() {
       if ((e.target as HTMLElement).tagName === 'INPUT') return;
       if (e.key === 'l' || e.key === 'L') navigate('/leaderboard');
       if (e.key === 'h' || e.key === 'H') navigate('/history');
+      if (e.key === 'd' || e.key === 'D') navigate('/drivers');
       if (e.key === ' ')                   { e.preventDefault(); navigate('/'); }
     };
     window.addEventListener('keydown', handler);
@@ -32,6 +34,7 @@ export default function App() {
           <Route path="/history"       element={<HistoryPage />} />
           <Route path="/history/:id"   element={<SessionDetail />} />
           <Route path="/leaderboard"   element={<LeaderboardPage />} />
+          <Route path="/drivers"        element={<DriversPageWrapper />} />
           <Route path="/drivers/:name" element={<DriverPage />} />
           <Route path="*"              element={<Navigate to="/" replace />} />
         </Route>

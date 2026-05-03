@@ -33,6 +33,7 @@ export default function NavBar() {
           { to: '/', label: 'Live', end: true },
           { to: '/history', label: 'History', end: false },
           { to: '/leaderboard', label: 'Leaderboard', end: false },
+          { to: '/drivers', label: 'Drivers', end: false },
         ].map(({ to, label, end }) => (
           <NavLink key={to} to={to} end={end} style={({ isActive }) => ({
             padding: '5px 16px',

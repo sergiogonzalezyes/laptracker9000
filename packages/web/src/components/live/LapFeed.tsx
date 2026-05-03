@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLiveStore, LiveLap } from '../../store/liveStore';
 import { formatLapTime } from '../../api/client';
 import { useDriverTheme } from '../../hooks/useDriverTheme';
+import { api, DriverSummary } from '../../api/client';
 import ClaimModal from '../ClaimModal';
 
 // Sector color: compare sector time to driver's personal best sector
@@ -31,13 +32,18 @@ function formatDelta(ms: number, bestMs: number): string {
 
 export default function LapFeed({ filterDriver }: { filterDriver?: string | null }) {
   const { recentLaps } = useLiveStore();
-  const { selected, drivers, markClaimed } = useDriverTheme();
+  const { me, login } = useDriverTheme();
   const [claimTarget, setClaimTarget] = useState<string | null>(null);
+  const [allDrivers, setAllDrivers] = useState<DriverSummary[]>([]);
   const topRef = useRef<HTMLDivElement>(null);
   const now = Date.now();
 
-  // Set of unclaimed driver names
-  const unclaimedNames = new Set(drivers.filter(d => !d.claimed).map(d => d.name));
+  useEffect(() => {
+    api.allDrivers().then(setAllDrivers);
+  }, []);
+
+  // Show "This is me!" for unclaimed drivers when nobody is logged in
+  const unclaimedNames = new Set(allDrivers.filter(d => !d.claimed).map(d => d.name));
 
   useEffect(() => {
     topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -81,10 +87,9 @@ export default function LapFeed({ filterDriver }: { filterDriver?: string | null
       <ClaimModal
         driverName={claimTarget}
         onClose={() => setClaimTarget(null)}
-        onClaimed={() => {
+        onClaimed={(color: string) => {
+          if (claimTarget) login(claimTarget, color);
           setClaimTarget(null);
-          const d = drivers.find(x => x.name === claimTarget);
-          if (d) markClaimed(d.name, d.color);
         }}
       />
     )}
@@ -146,7 +151,7 @@ export default function LapFeed({ filterDriver }: { filterDriver?: string | null
                 <td style={{ fontWeight: 600, fontSize: 13 }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     {lap.driverName}
-                    {!selected && unclaimedNames.has(lap.driverName) && (
+                    {!me && unclaimedNames.has(lap.driverName) && (
                       <button
                         onClick={() => setClaimTarget(lap.driverName)}
                         style={{

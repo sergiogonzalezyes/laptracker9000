@@ -1,8 +1,10 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useDriverTheme } from '../hooks/useDriverTheme';
 export default function ClaimModal({ driverName, onClose, onClaimed }) {
+    const navigate = useNavigate();
     const [step, setStep] = useState('confirm');
     const [pin, setPin] = useState('');
     const [pinConfirm, setPinConfirm] = useState('');
@@ -10,7 +12,7 @@ export default function ClaimModal({ driverName, onClose, onClaimed }) {
     const [tagline, setTagline] = useState('');
     const [error, setError] = useState('');
     const [saving, setSaving] = useState(false);
-    const { selectDriver, drivers } = useDriverTheme();
+    const { login } = useDriverTheme();
     const handlePinNext = () => {
         if (!/^\d{4}$/.test(pin)) {
             setError('PIN must be 4 digits');
@@ -34,10 +36,9 @@ export default function ClaimModal({ driverName, onClose, onClaimed }) {
                 setSaving(false);
                 return;
             }
-            // Mark as claimed in localStorage
-            const driver = drivers.find(d => d.name === driverName);
-            selectDriver(driver ? { ...driver, color, claimed: 1 } : { name: driverName, color, tagline, claimed: 1, total_laps: 0, valid_laps: 0, best_lap_ms: null, track_count: 0 });
-            onClaimed();
+            login(driverName, color);
+            onClaimed(color);
+            navigate(`/drivers/${encodeURIComponent(driverName)}`);
         }
         catch {
             setError('Network error');

@@ -6,7 +6,7 @@ import { useIsMobile } from '../hooks/useBreakpoint';
 
 export default function DriverPage() {
   const { name } = useParams<{ name: string }>();
-  const { selected, refreshColor } = useDriverTheme();
+  const { me, refreshColor } = useDriverTheme();
   const [profile, setProfile] = useState<DriverProfile | null>(null);
   const [color, setColor] = useState('#cc0000');
   const [tagline, setTagline] = useState('');
@@ -18,7 +18,7 @@ export default function DriverPage() {
   const [notFound, setNotFound] = useState(false);
 
   const decodedName = name ? decodeURIComponent(name) : '';
-  const isMyProfile = selected?.name === decodedName && selected?.claimed;
+  const isMyProfile = me?.name === decodedName && me?.claimed;
   const isMobile = useIsMobile();
 
   useEffect(() => {

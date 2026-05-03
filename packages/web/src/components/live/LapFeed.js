@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLiveStore } from '../../store/liveStore';
 import { formatLapTime } from '../../api/client';
 import { useDriverTheme } from '../../hooks/useDriverTheme';
+import { api } from '../../api/client';
 import ClaimModal from '../ClaimModal';
 // Sector color: compare sector time to driver's personal best sector
 function sectorColor(ms, bestMs) {
@@ -37,12 +38,16 @@ function formatDelta(ms, bestMs) {
 }
 export default function LapFeed({ filterDriver }) {
     const { recentLaps } = useLiveStore();
-    const { selected, drivers, markClaimed } = useDriverTheme();
+    const { me, login } = useDriverTheme();
     const [claimTarget, setClaimTarget] = useState(null);
+    const [allDrivers, setAllDrivers] = useState([]);
     const topRef = useRef(null);
     const now = Date.now();
-    // Set of unclaimed driver names
-    const unclaimedNames = new Set(drivers.filter(d => !d.claimed).map(d => d.name));
+    useEffect(() => {
+        api.allDrivers().then(setAllDrivers);
+    }, []);
+    // Show "This is me!" for unclaimed drivers when nobody is logged in
+    const unclaimedNames = new Set(allDrivers.filter(d => !d.claimed).map(d => d.name));
     useEffect(() => {
         topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, [recentLaps.length]);
@@ -72,11 +77,10 @@ export default function LapFeed({ filterDriver }) {
     if (laps.length === 0)
         return (_jsx("div", { style: { padding: '50px 16px', textAlign: 'center', color: '#1e1e1e', fontFamily: 'var(--font-display)', letterSpacing: '0.15em', fontSize: 12 }, children: "NO LAPS YET" }));
     const displayLaps = laps.slice(0, 40);
-    return (_jsxs(_Fragment, { children: [claimTarget && (_jsx(ClaimModal, { driverName: claimTarget, onClose: () => setClaimTarget(null), onClaimed: () => {
+    return (_jsxs(_Fragment, { children: [claimTarget && (_jsx(ClaimModal, { driverName: claimTarget, onClose: () => setClaimTarget(null), onClaimed: (color) => {
+                    if (claimTarget)
+                        login(claimTarget, color);
                     setClaimTarget(null);
-                    const d = drivers.find(x => x.name === claimTarget);
-                    if (d)
-                        markClaimed(d.name, d.color);
                 } })), _jsxs("div", { children: [validLaps.length > 0 && (_jsx("div", { style: { display: 'flex', gap: 1, borderBottom: '1px solid var(--border)' }, children: [
                             { label: 'BEST', value: formatLapTime(sessionBestMs), highlight: true },
                             { label: 'AVERAGE', value: avgMs ? formatLapTime(Math.round(avgMs)) : '—', highlight: false },
@@ -90,7 +94,7 @@ export default function LapFeed({ filterDriver }) {
                                         const trend = lapTrend(displayLaps, idx);
                                         const bestS1 = driverBestS1.get(lap.driverName) ?? Infinity;
                                         const bestS2 = driverBestS2.get(lap.driverName) ?? Infinity;
-                                        return (_jsxs("tr", { className: pulseClass, children: [_jsx("td", { style: { width: 20, padding: '10px 4px' }, children: trend && _jsx("span", { style: { fontSize: 9, color: trend.color, fontWeight: 700 }, children: trend.sym }) }), _jsx("td", { style: { color: 'var(--text-muted)', fontSize: 10, fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }, children: lap.lapNumber || '—' }), _jsx("td", { style: { fontWeight: 600, fontSize: 13 }, children: _jsxs("span", { style: { display: 'flex', alignItems: 'center', gap: 8 }, children: [lap.driverName, !selected && unclaimedNames.has(lap.driverName) && (_jsx("button", { onClick: () => setClaimTarget(lap.driverName), style: {
+                                        return (_jsxs("tr", { className: pulseClass, children: [_jsx("td", { style: { width: 20, padding: '10px 4px' }, children: trend && _jsx("span", { style: { fontSize: 9, color: trend.color, fontWeight: 700 }, children: trend.sym }) }), _jsx("td", { style: { color: 'var(--text-muted)', fontSize: 10, fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }, children: lap.lapNumber || '—' }), _jsx("td", { style: { fontWeight: 600, fontSize: 13 }, children: _jsxs("span", { style: { display: 'flex', alignItems: 'center', gap: 8 }, children: [lap.driverName, !me && unclaimedNames.has(lap.driverName) && (_jsx("button", { onClick: () => setClaimTarget(lap.driverName), style: {
                                                                     fontFamily: 'var(--font-display)', fontSize: 8, fontWeight: 700,
                                                                     letterSpacing: '0.08em', padding: '2px 7px',
                                                                     background: 'rgba(204,0,0,0.15)', color: 'var(--accent-hot)',

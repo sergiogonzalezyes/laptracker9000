@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import { api, DriverSummary } from '../api/client';
+import { useEffect, useState, useCallback } from 'react';
 
 const LS_KEY = 'laptracker_driver';
 
@@ -23,14 +22,14 @@ function darken(hex: string, pct: number): string {
   return rgbToHex(Math.round(r * pct), Math.round(g * pct), Math.round(b * pct));
 }
 
-function applyTheme(color: string) {
+export function applyTheme(color: string) {
   const root = document.documentElement;
   root.style.setProperty('--accent',     color);
   root.style.setProperty('--accent-hot', lighten(color, 40));
   root.style.setProperty('--accent-dim', darken(color, 0.15));
 }
 
-function resetTheme() {
+export function resetTheme() {
   const root = document.documentElement;
   root.style.setProperty('--accent',     '#cc0000');
   root.style.setProperty('--accent-hot', '#ff2020');
@@ -43,48 +42,44 @@ export interface StoredDriver {
   claimed: boolean;
 }
 
+function readStored(): StoredDriver | null {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) ?? 'null'); } catch { return null; }
+}
+
+function writeStored(d: StoredDriver) {
+  localStorage.setItem(LS_KEY, JSON.stringify(d));
+}
+
 export function useDriverTheme() {
-  const [drivers, setDrivers] = useState<DriverSummary[]>([]);
-  const [selected, setSelected] = useState<StoredDriver | null>(() => {
-    try { return JSON.parse(localStorage.getItem(LS_KEY) ?? 'null'); } catch { return null; }
-  });
+  const [me, setMe] = useState<StoredDriver | null>(readStored);
 
+  // Apply theme on mount
   useEffect(() => {
-    if (selected?.color) applyTheme(selected.color);
+    if (me?.color) applyTheme(me.color);
   }, []);
 
-  useEffect(() => {
-    api.allDrivers().then(setDrivers);
-  }, []);
-
-  const selectDriver = (d: Pick<DriverSummary, 'name' | 'color' | 'claimed'> | null) => {
-    if (d) {
-      const stored: StoredDriver = { name: d.name, color: d.color, claimed: !!d.claimed };
-      localStorage.setItem(LS_KEY, JSON.stringify(stored));
-      setSelected(stored);
-      applyTheme(d.color);
-    } else {
-      localStorage.removeItem(LS_KEY);
-      setSelected(null);
-      resetTheme();
-    }
-  };
-
-  const refreshColor = (name: string, color: string) => {
-    if (selected?.name === name) {
-      const updated = { ...selected, color };
-      localStorage.setItem(LS_KEY, JSON.stringify(updated));
-      setSelected(updated);
-      applyTheme(color);
-    }
-  };
-
-  const markClaimed = (name: string, color: string) => {
-    const updated: StoredDriver = { name, color, claimed: true };
-    localStorage.setItem(LS_KEY, JSON.stringify(updated));
-    setSelected(updated);
+  const login = useCallback((name: string, color: string) => {
+    const stored: StoredDriver = { name, color, claimed: true };
+    writeStored(stored);
+    setMe(stored);
     applyTheme(color);
-  };
+  }, []);
 
-  return { drivers, selected, selectDriver, refreshColor, markClaimed };
+  const logout = useCallback(() => {
+    localStorage.removeItem(LS_KEY);
+    setMe(null);
+    resetTheme();
+  }, []);
+
+  const refreshColor = useCallback((name: string, color: string) => {
+    setMe(prev => {
+      if (prev?.name !== name) return prev;
+      const updated = { ...prev, color };
+      writeStored(updated);
+      applyTheme(color);
+      return updated;
+    });
+  }, []);
+
+  return { me, login, logout, refreshColor };
 }

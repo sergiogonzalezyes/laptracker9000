@@ -1,0 +1,9 @@
+{
+  "apiUrl": "http://localhost:3001",
+  "apiToken": "647e70982028cabd75bc45635da5cb9f3b357078cfbcd6d3",
+  "mode": "auto",
+  "watchPath": "F:\\Program Files (x86)\\Steam\\steamapps\\common\\assettocorsa\\server\\results",
+  "acClientLogPath": "C:\\Users\\YourName\\Documents\\Assetto Corsa\\logs",
+  "playerName": "*",
+  "backfill": false
+}

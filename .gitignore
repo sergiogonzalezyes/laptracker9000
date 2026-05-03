@@ -1,0 +1,9 @@
+node_modules/
+dist/
+packages/server/data/
+*.db
+*.db-shm
+*.db-wal
+.env
+packages/agent/laptracker-agent.exe
+packages/web/dist/

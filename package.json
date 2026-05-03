@@ -1,0 +1,16 @@
+{
+  "name": "laptracker9000",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,web -c cyan,magenta \"npm run dev -w @laptracker/server\" \"npm run dev -w @laptracker/web\"",
+    "build": "npm run build -w @laptracker/server && npm run build -w @laptracker/web",
+    "start": "npm run start -w @laptracker/server",
+    "agent": "npm run start -w laptracker-agent"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,7 @@
+import { jsxs as _jsxs, jsx as _jsx } from "react/jsx-runtime";
+import { formatLapTime } from '../../api/client';
+export default function DriverCard({ driver, rank, leaderBestMs }) {
+    const gap = driver.bestLapMs - leaderBestMs;
+    const isLeader = gap === 0;
+    return (_jsxs("div", { className: "card", style: { padding: '14px 16px', minWidth: 200 }, children: [_jsxs("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }, children: [_jsxs("span", { style: { fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }, children: ["P", rank] }), _jsxs("span", { style: { fontSize: 11, color: 'var(--text-muted)' }, children: [driver.lapCount, " laps"] })] }), _jsx("div", { style: { fontWeight: 600, marginBottom: 8, fontSize: 15 }, children: driver.name }), _jsx("div", { className: "mono", style: { fontSize: 22, fontWeight: 700, color: isLeader ? 'var(--accent)' : 'var(--text-primary)', marginBottom: 4 }, children: driver.bestLapMs === Infinity ? '--:--.---' : formatLapTime(driver.bestLapMs) }), !isLeader && driver.bestLapMs !== Infinity && (_jsxs("div", { style: { fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }, children: ["+", formatLapTime(gap)] })), _jsx("div", { style: { marginTop: 8, fontSize: 11, color: 'var(--text-muted)', borderTop: '1px solid var(--border)', paddingTop: 8 }, children: driver.carModel.replace(/_/g, ' ') })] }));
+}

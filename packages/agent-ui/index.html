@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LapTracker9000 Agent</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0d0d;
+      color: #e0e0e0;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 13px;
+      padding: 20px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    h1 {
+      font-size: 16px;
+      color: #e8b000;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      border-bottom: 1px solid #222;
+      padding-bottom: 10px;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #555;
+      flex-shrink: 0;
+    }
+    .dot.watching { background: #00c853; box-shadow: 0 0 6px #00c853; }
+    .dot.error    { background: #e53935; box-shadow: 0 0 6px #e53935; }
+
+    .last-session {
+      background: #111;
+      border: 1px solid #222;
+      border-left: 3px solid #e8b000;
+      padding: 10px 12px;
+      border-radius: 3px;
+      min-height: 48px;
+      line-height: 1.6;
+    }
+    .last-session .track  { color: #e8b000; font-weight: bold; }
+    .last-session .time   { color: #00c853; }
+    .last-session .muted  { color: #555; }
+
+    .config-grid {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: 6px 10px;
+      align-items: center;
+    }
+
+    label { color: #888; text-align: right; }
+
+    .row { display: flex; gap: 6px; }
+    .row input { flex: 1; }
+
+    input {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: #e0e0e0;
+      padding: 5px 8px;
+      border-radius: 3px;
+      font-family: inherit;
+      font-size: 13px;
+      width: 100%;
+    }
+    input:focus { outline: none; border-color: #e8b000; }
+
+    button {
+      background: #1a1a1a;
+      border: 1px solid #444;
+      color: #e0e0e0;
+      padding: 5px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    button:hover { border-color: #e8b000; color: #e8b000; }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-save {
+      flex: 1;
+      background: #e8b000;
+      color: #000;
+      border-color: #e8b000;
+      font-weight: bold;
+      padding: 7px;
+    }
+    .btn-save:hover { background: #ffd740; border-color: #ffd740; color: #000; }
+
+    .btn-test { color: #888; }
+
+    .activity {
+      flex: 1;
+      background: #0a0a0a;
+      border: 1px solid #1e1e1e;
+      border-radius: 3px;
+      padding: 8px 10px;
+      overflow-y: auto;
+      font-size: 11px;
+      line-height: 1.7;
+      color: #555;
+    }
+    .activity .entry { color: #888; }
+    .activity .entry.ok  { color: #00c853; }
+    .activity .entry.err { color: #e53935; }
+    .activity .entry.info { color: #e8b000; }
+  </style>
+</head>
+<body>
+  <h1>LapTracker9000 &mdash; Agent</h1>
+
+  <div class="status-bar">
+    <div class="dot" id="dot"></div>
+    <span id="status-text">Starting...</span>
+  </div>
+
+  <div class="last-session" id="last-session">
+    <span class="muted">No sessions posted yet.</span>
+  </div>
+
+  <div class="config-grid">
+    <label>API URL</label>
+    <input id="apiUrl" type="text" placeholder="http://localhost:3001" />
+
+    <label>Token</label>
+    <input id="apiToken" type="password" placeholder="your-ingest-token" />
+
+    <label>Player Name</label>
+    <input id="playerName" type="text" placeholder="leave blank to use AC profile name" />
+
+    <label>AC Out Folder</label>
+    <div class="row">
+      <input id="outPath" type="text" readonly />
+      <button id="browseBtn">Browse</button>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-save" id="saveBtn">Save &amp; Apply</button>
+    <button class="btn-test" id="testBtn">Test Connection</button>
+  </div>
+
+  <div class="activity" id="activity"></div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    const $ = id => document.getElementById(id);
+
+    function addLog(msg, type = 'entry') {
+      const el = document.createElement('div');
+      el.className = `entry ${type}`;
+      el.textContent = `${new Date().toLocaleTimeString()}  ${msg}`;
+      const activity = $('activity');
+      activity.appendChild(el);
+      activity.scrollTop = activity.scrollHeight;
+    }
+
+    function setStatus(state) {
+      const dot = $('dot');
+      const text = $('status-text');
+      dot.className = 'dot';
+      if (state === 'watching') {
+        dot.classList.add('watching');
+        text.textContent = 'Watching for session end…';
+      } else if (state === 'error') {
+        dot.classList.add('error');
+        text.textContent = 'Watch path not found';
+      } else {
+        text.textContent = 'Idle';
+      }
+    }
+
+    // Load config into fields
+    ipcRenderer.invoke('get-config').then(cfg => {
+      $('apiUrl').value    = cfg.apiUrl    ?? '';
+      $('apiToken').value  = cfg.apiToken  ?? '';
+      $('playerName').value = cfg.playerName ?? '';
+      $('outPath').value   = cfg.outPath   ?? '';
+    });
+
+    // Receive status updates from main
+    ipcRenderer.on('status', (_e, state) => setStatus(state));
+
+    ipcRenderer.on('log', (_e, msg) => {
+      const type = msg.startsWith('✓') ? 'ok'
+                 : msg.startsWith('✗') || msg.startsWith('⚠') ? 'err'
+                 : msg.startsWith('Session ended') ? 'info'
+                 : 'entry';
+      addLog(msg, type);
+    });
+
+    ipcRenderer.on('last-session', (_e, s) => {
+      $('last-session').innerHTML =
+        `<span class="track">${s.track}</span> &nbsp;·&nbsp; ${s.sessionType}<br>` +
+        `<span style="color:#aaa">${s.driverName}</span> &nbsp;·&nbsp; ${s.carModel}<br>` +
+        `Best: <span class="time">${s.best}</span> &nbsp;·&nbsp; ${s.count} lap${s.count !== 1 ? 's' : ''}`;
+    });
+
+    // Browse for AC out folder
+    $('browseBtn').addEventListener('click', async () => {
+      const p = await ipcRenderer.invoke('select-folder');
+      if (p) $('outPath').value = p;
+    });
+
+    // Save & apply
+    $('saveBtn').addEventListener('click', async () => {
+      const cfg = {
+        apiUrl:     $('apiUrl').value.trim(),
+        apiToken:   $('apiToken').value.trim(),
+        playerName: $('playerName').value.trim(),
+        outPath:    $('outPath').value.trim(),
+      };
+      await ipcRenderer.invoke('save-config', cfg);
+      addLog('Config saved.', 'ok');
+    });
+
+    // Test connection
+    $('testBtn').addEventListener('click', async () => {
+      addLog('Testing connection…');
+      const result = await ipcRenderer.invoke('test-connection');
+      if (result.ok) {
+        addLog('✓ Connected to API', 'ok');
+      } else {
+        addLog(`✗ ${result.error}`, 'err');
+      }
+    });
+  </script>
+</body>
+</html>

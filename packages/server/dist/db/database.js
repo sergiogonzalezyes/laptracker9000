@@ -29,6 +29,16 @@ function initDb(dbPath) {
             // Ignore "already exists" errors from CREATE TABLE IF NOT EXISTS
         }
     }
+    // Migrations: add columns that may not exist in older DBs
+    const migrations = [
+        `ALTER TABLE driver_profiles ADD COLUMN pin_hash TEXT NOT NULL DEFAULT ''`,
+    ];
+    for (const m of migrations) {
+        try {
+            _db.exec(m + ';');
+        }
+        catch { /* column already exists */ }
+    }
     return _db;
 }
 function closeDb() {

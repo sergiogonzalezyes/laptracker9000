@@ -1,8 +1,9 @@
 import { LiveDriver } from '../../store/liveStore';
 import { formatLapTime } from '../../api/client';
+import Sparkline from '../charts/Sparkline';
 
-export default function DriverCard({ driver, rank, leaderBestMs }: {
-  driver: LiveDriver; rank: number; leaderBestMs: number;
+export default function DriverCard({ driver, rank, leaderBestMs, lapHistory = [] }: {
+  driver: LiveDriver; rank: number; leaderBestMs: number; lapHistory?: number[];
 }) {
   const gap = driver.bestLapMs - leaderBestMs;
   const isLeader = gap === 0;
@@ -66,13 +67,21 @@ export default function DriverCard({ driver, rank, leaderBestMs }: {
         </div>
       )}
 
-      {/* Car */}
-      <div style={{
-        marginTop: 10, paddingTop: 8,
-        borderTop: '1px solid var(--border)',
-        fontSize: 11, color: 'var(--text-muted)',
-      }}>
-        {driver.carModel.replace(/_/g, ' ')}
+      {/* Sparkline + car */}
+      <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
+        {lapHistory.length >= 3 && (
+          <div style={{ marginBottom: 6 }}>
+            <Sparkline
+              times={lapHistory}
+              width={180}
+              height={28}
+              color={isLeader ? 'var(--accent)' : '#555'}
+            />
+          </div>
+        )}
+        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+          {driver.carModel.replace(/_/g, ' ')}
+        </div>
       </div>
     </div>
   );

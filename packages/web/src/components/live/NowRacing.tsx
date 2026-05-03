@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLiveStore } from '../../store/liveStore';
 import { trackDisplayName } from '../../api/client';
 import DriverCard from './DriverCard';
+import Sparkline from '../charts/Sparkline';
 
 type SortMode = 'lap' | 'count' | 'alpha';
 
@@ -11,7 +12,7 @@ interface Props {
 }
 
 export default function NowRacing({ focusedDriver, onFocus }: Props) {
-  const { currentSession, drivers, acStatus } = useLiveStore();
+  const { currentSession, drivers, acStatus, recentLaps } = useLiveStore();
   const [sortMode, setSortMode] = useState<SortMode>('lap');
 
   const track = acStatus?.track || currentSession?.track || '';
@@ -25,6 +26,15 @@ export default function NowRacing({ focusedDriver, onFocus }: Props) {
   });
   const leaderBestMs = [...drivers.values()]
     .sort((a, b) => a.bestLapMs - b.bestLapMs)[0]?.bestLapMs ?? Infinity;
+
+  // Per-driver lap history for sparklines
+  const driverLapHistory = new Map<string, number[]>();
+  for (const lap of recentLaps) {
+    if (!lap.valid) continue;
+    const arr = driverLapHistory.get(lap.driverName) ?? [];
+    arr.push(lap.lapTimeMs);
+    driverLapHistory.set(lap.driverName, arr);
+  }
 
   if (!isActive && sorted.length === 0) {
     return (
@@ -93,7 +103,12 @@ export default function NowRacing({ focusedDriver, onFocus }: Props) {
                 borderRadius: 6,
               }}
             >
-              <DriverCard driver={d} rank={i + 1} leaderBestMs={leaderBestMs} />
+              <DriverCard
+                driver={d}
+                rank={i + 1}
+                leaderBestMs={leaderBestMs}
+                lapHistory={driverLapHistory.get(d.name) ?? []}
+              />
             </div>
           ))}
         </div>

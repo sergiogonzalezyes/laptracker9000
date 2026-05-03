@@ -4,7 +4,7 @@ import { useLiveStore } from '../../store/liveStore';
 import { trackDisplayName } from '../../api/client';
 import DriverCard from './DriverCard';
 export default function NowRacing({ focusedDriver, onFocus }) {
-    const { currentSession, drivers, acStatus } = useLiveStore();
+    const { currentSession, drivers, acStatus, recentLaps } = useLiveStore();
     const [sortMode, setSortMode] = useState('lap');
     const track = acStatus?.track || currentSession?.track || '';
     const sessionType = acStatus?.sessionType || currentSession?.session_type || '';
@@ -18,6 +18,15 @@ export default function NowRacing({ focusedDriver, onFocus }) {
     });
     const leaderBestMs = [...drivers.values()]
         .sort((a, b) => a.bestLapMs - b.bestLapMs)[0]?.bestLapMs ?? Infinity;
+    // Per-driver lap history for sparklines
+    const driverLapHistory = new Map();
+    for (const lap of recentLaps) {
+        if (!lap.valid)
+            continue;
+        const arr = driverLapHistory.get(lap.driverName) ?? [];
+        arr.push(lap.lapTimeMs);
+        driverLapHistory.set(lap.driverName, arr);
+    }
     if (!isActive && sorted.length === 0) {
         return (_jsx("div", { style: { padding: '60px 0', textAlign: 'center' }, children: _jsx("div", { style: { fontSize: 13, color: 'var(--text-muted)', fontWeight: 500, letterSpacing: '0.06em' }, children: "No active session \u2014 server is offline or no laps in progress" }) }));
     }
@@ -34,5 +43,5 @@ export default function NowRacing({ focusedDriver, onFocus }) {
                         }, children: ["\u2715 ", focusedDriver] }))] })), sorted.length > 0 ? (_jsx("div", { style: { display: 'flex', flexWrap: 'wrap', gap: 10 }, children: sorted.map((d, i) => (_jsx("div", { onClick: () => onFocus(focusedDriver === d.name ? null : d.name), style: {
                         outline: focusedDriver === d.name ? '2px solid var(--accent)' : '2px solid transparent',
                         borderRadius: 6,
-                    }, children: _jsx(DriverCard, { driver: d, rank: i + 1, leaderBestMs: leaderBestMs }) }, d.name))) })) : (_jsx("div", { style: { fontSize: 13, color: 'var(--text-muted)' }, children: "Waiting for drivers..." }))] }));
+                    }, children: _jsx(DriverCard, { driver: d, rank: i + 1, leaderBestMs: leaderBestMs, lapHistory: driverLapHistory.get(d.name) ?? [] }) }, d.name))) })) : (_jsx("div", { style: { fontSize: 13, color: 'var(--text-muted)' }, children: "Waiting for drivers..." }))] }));
 }

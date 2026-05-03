@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api, Session, Lap, formatLapTime, trackDisplayName } from '../../api/client';
 import { useIsMobile } from '../../hooks/useBreakpoint';
+import LapTimeChart from '../charts/LapTimeChart';
 
 function sectorColor(ms: number | null, bestMs: number | null): string {
   if (!ms || !bestMs) return 'var(--text-muted)';
@@ -184,6 +185,23 @@ export default function SessionDetail() {
             {focusDriver ? focusDriver.toUpperCase() : `ALL LAPS`}
             <span style={{ marginLeft: 8, fontSize: 9, color: '#333' }}>({focusLaps.length} laps{focusDriver ? ' · click driver to deselect' : ''})</span>
           </div>
+
+          {/* Lap time chart */}
+          {focusStats.validCount >= 2 && (
+            <div className="card" style={{ marginBottom: 8, padding: '12px 16px 8px' }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>
+                Lap Time Progression
+              </div>
+              <LapTimeChart
+                laps={focusLaps.map(l => ({
+                  lapNumber: l.lap_number,
+                  lapTimeMs: l.lap_time_ms,
+                  valid: l.valid === 1,
+                }))}
+                height={140}
+              />
+            </div>
+          )}
 
           {/* Stats bar */}
           {focusStats.validCount > 0 && (

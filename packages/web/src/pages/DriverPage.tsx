@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { api, DriverProfile, formatLapTime, trackDisplayName } from '../api/client';
 import { useDriverTheme } from '../hooks/useDriverTheme';
 import { useIsMobile } from '../hooks/useBreakpoint';
+import SessionProgressChart from '../components/charts/SessionProgressChart';
 
 export default function DriverPage() {
   const { name } = useParams<{ name: string }>();
@@ -201,6 +202,16 @@ export default function DriverPage() {
           ))}
         </div>
       </div>
+
+      {/* Session progression chart */}
+      {recentSessions.filter(s => s.best_ms).length >= 2 && (
+        <div className="card" style={{ padding: '14px 16px 10px' }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>
+            Session Progression
+          </div>
+          <SessionProgressChart sessions={recentSessions} height={130} accentColor={color} />
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
         {/* Track bests */}

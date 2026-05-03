@@ -80,7 +80,8 @@ export default function SessionList() {
       </div>
 
       <div className="card">
-        <table>
+        <div className="table-scroll">
+        <table style={{ minWidth: 480 }}>
           <thead>
             <tr>
               <SortTh label="DATE"   col="started_at"   sort={sort} dir={dir} onSort={handleSort} />
@@ -109,6 +110,7 @@ export default function SessionList() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {total > limit && (

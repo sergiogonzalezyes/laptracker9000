@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '../../hooks/useBreakpoint';
 import { api, LeaderboardEntry, TrackSummary, formatLapTime, trackDisplayName } from '../../api/client';
 
 type SortKey = 'lap_time_ms' | 'driver_name' | 'car_model' | 'completed_at';
@@ -109,11 +110,18 @@ export default function Leaderboard() {
 
   const leaderMs = sorted[0]?.lap_time_ms ?? 0;
   const currentTrack = tracks.find(t => t.track === selectedTrack);
+  const isMobile = useIsMobile();
 
   return (
     <div>
-      {/* Track grid */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+      {/* Track grid — horizontal scroll on mobile */}
+      <div style={{
+        display: 'flex',
+        flexWrap: isMobile ? 'nowrap' : 'wrap',
+        gap: 8, marginBottom: 20,
+        overflowX: isMobile ? 'auto' : 'visible',
+        paddingBottom: isMobile ? 4 : 0,
+      }}>
         {tracks.map(t => (
           <TrackCard key={t.track} track={t} selected={t.track === selectedTrack} onClick={() => setSelectedTrack(t.track)} />
         ))}
@@ -164,7 +172,8 @@ export default function Leaderboard() {
 
       {/* Leaderboard table */}
       <div className="card">
-        <table>
+        <div className="table-scroll">
+        <table style={{ minWidth: 600 }}>
           <thead>
             <tr>
               <th style={{ width: 64, textAlign: 'center' }}>POS</th>
@@ -261,6 +270,7 @@ export default function Leaderboard() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

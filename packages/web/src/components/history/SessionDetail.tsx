@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api, Session, Lap, formatLapTime, trackDisplayName } from '../../api/client';
+import { useIsMobile } from '../../hooks/useBreakpoint';
 
 function sectorColor(ms: number | null, bestMs: number | null): string {
   if (!ms || !bestMs) return 'var(--text-muted)';
@@ -72,6 +73,7 @@ export default function SessionDetail() {
   const { id } = useParams<{ id: string }>();
   const [session, setSession] = useState<(Session & { laps: Lap[] }) | null>(null);
   const [focusDriver, setFocusDriver] = useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (id) api.session(parseInt(id, 10)).then(s => {
@@ -121,7 +123,7 @@ export default function SessionDetail() {
         </span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '260px 1fr', gap: 16 }}>
         {/* Standings sidebar */}
         <div>
           <div className="section-label">Standings</div>
@@ -195,7 +197,8 @@ export default function SessionDetail() {
           )}
 
           <div className="card">
-            <table>
+            <div className="table-scroll">
+            <table style={{ minWidth: 560 }}>
               <thead>
                 <tr>
                   <th style={{ width: 20 }}></th>
@@ -265,6 +268,7 @@ export default function SessionDetail() {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       </div>

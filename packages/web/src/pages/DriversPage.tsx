@@ -15,7 +15,7 @@ export default function DriversPage() {
 
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: 10 }}>
         {drivers.map(d => (
           <Link key={d.name} to={`/drivers/${encodeURIComponent(d.name)}`} style={{ textDecoration: 'none' }}>
             <div style={{

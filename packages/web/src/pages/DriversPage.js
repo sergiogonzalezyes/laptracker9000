@@ -7,7 +7,7 @@ export default function DriversPage() {
     useEffect(() => { api.allDrivers().then(setDrivers); }, []);
     if (drivers.length === 0)
         return (_jsx("div", { style: { textAlign: 'center', padding: '80px 0', color: '#222', fontFamily: 'var(--font-display)', letterSpacing: '0.15em', fontSize: 12 }, children: "NO DRIVERS YET" }));
-    return (_jsx("div", { children: _jsx("div", { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }, children: drivers.map(d => (_jsx(Link, { to: `/drivers/${encodeURIComponent(d.name)}`, style: { textDecoration: 'none' }, children: _jsxs("div", { style: {
+    return (_jsx("div", { children: _jsx("div", { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: 10 }, children: drivers.map(d => (_jsx(Link, { to: `/drivers/${encodeURIComponent(d.name)}`, style: { textDecoration: 'none' }, children: _jsxs("div", { style: {
                         background: 'linear-gradient(135deg, #111 0%, #0b0b0b 100%)',
                         border: `1px solid #222`,
                         borderTop: `1px solid #333`,

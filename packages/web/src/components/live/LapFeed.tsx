@@ -112,7 +112,8 @@ export default function LapFeed({ filterDriver }: { filterDriver?: string | null
 
       {/* Lap table */}
       <div ref={topRef} />
-      <table>
+      <div className="table-scroll">
+      <table style={{ minWidth: 560 }}>
         <thead>
           <tr>
             <th style={{ width: 20 }}></th>
@@ -185,6 +186,7 @@ export default function LapFeed({ filterDriver }: { filterDriver?: string | null
           })}
         </tbody>
       </table>
+      </div>
     </div>
     </>
   );

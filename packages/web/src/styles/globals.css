@@ -176,6 +176,22 @@ tbody tr:hover td {
 .dot-red   { background: var(--accent-hot); box-shadow: 0 0 6px var(--accent-hot); }
 .dot-grey  { background: #444; }
 
+/* ── Responsive table wrapper ───────────────────────────────────────────── */
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* ── Mobile ─────────────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  html, body, #root { font-size: 13px; }
+
+  th { padding: 8px 12px; font-size: 10px; }
+  td { padding: 10px 12px; font-size: 13px; }
+
+  .section-label { font-size: 10px; margin-bottom: 10px; }
+
+  .hide-mobile { display: none !important; }
+  .stack-mobile { flex-direction: column !important; }
+}
+
 /* ── Inputs ─────────────────────────────────────────────────────────────── */
 select, input[type="text"], input[type="password"] {
   background: var(--bg-elevated);

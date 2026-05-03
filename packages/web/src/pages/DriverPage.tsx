@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api, DriverProfile, formatLapTime, trackDisplayName } from '../api/client';
 import { useDriverTheme } from '../hooks/useDriverTheme';
+import { useIsMobile } from '../hooks/useBreakpoint';
 
 export default function DriverPage() {
   const { name } = useParams<{ name: string }>();
@@ -18,6 +19,7 @@ export default function DriverPage() {
 
   const decodedName = name ? decodeURIComponent(name) : '';
   const isMyProfile = selected?.name === decodedName && selected?.claimed;
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!name) return;
@@ -77,7 +79,8 @@ export default function DriverPage() {
         padding: '24px 28px',
         display: 'flex',
         alignItems: 'flex-start',
-        gap: 24,
+        flexWrap: 'wrap',
+        gap: 20,
         position: 'relative',
         overflow: 'hidden',
         boxShadow: `0 0 40px ${color}22`,
@@ -185,7 +188,7 @@ export default function DriverPage() {
         </div>
 
         {/* Quick stats */}
-        <div style={{ display: 'flex', gap: 1, flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: 1, flexShrink: 0, flexWrap: 'wrap' }}>
           {[
             { label: 'LAPS',   value: String(stats.total_laps) },
             { label: 'TRACKS', value: String(stats.track_count) },
@@ -199,7 +202,7 @@ export default function DriverPage() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
         {/* Track bests */}
         <div>
           <div className="section-label">Track Records</div>

@@ -39,18 +39,16 @@ export function useDriverTheme() {
             return null;
         }
     });
-    // Apply theme on mount from localStorage immediately
     useEffect(() => {
         if (selected?.color)
             applyTheme(selected.color);
     }, []);
-    // Load driver list
     useEffect(() => {
         api.allDrivers().then(setDrivers);
     }, []);
     const selectDriver = (d) => {
         if (d) {
-            const stored = { name: d.name, color: d.color };
+            const stored = { name: d.name, color: d.color, claimed: !!d.claimed };
             localStorage.setItem(LS_KEY, JSON.stringify(stored));
             setSelected(stored);
             applyTheme(d.color);
@@ -61,14 +59,19 @@ export function useDriverTheme() {
             resetTheme();
         }
     };
-    // If a driver updates their profile color, refresh
     const refreshColor = (name, color) => {
         if (selected?.name === name) {
-            const updated = { name, color };
+            const updated = { ...selected, color };
             localStorage.setItem(LS_KEY, JSON.stringify(updated));
             setSelected(updated);
             applyTheme(color);
         }
     };
-    return { drivers, selected, selectDriver, refreshColor };
+    const markClaimed = (name, color) => {
+        const updated = { name, color, claimed: true };
+        localStorage.setItem(LS_KEY, JSON.stringify(updated));
+        setSelected(updated);
+        applyTheme(color);
+    };
+    return { drivers, selected, selectDriver, refreshColor, markClaimed };
 }

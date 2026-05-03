@@ -1,7 +1,9 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useEffect, useRef } from 'react';
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
+import { useEffect, useRef, useState } from 'react';
 import { useLiveStore } from '../../store/liveStore';
 import { formatLapTime } from '../../api/client';
+import { useDriverTheme } from '../../hooks/useDriverTheme';
+import ClaimModal from '../ClaimModal';
 // Sector color: compare sector time to driver's personal best sector
 function sectorColor(ms, bestMs) {
     if (!ms || !bestMs || bestMs === Infinity)
@@ -35,8 +37,12 @@ function formatDelta(ms, bestMs) {
 }
 export default function LapFeed({ filterDriver }) {
     const { recentLaps } = useLiveStore();
+    const { selected, drivers, markClaimed } = useDriverTheme();
+    const [claimTarget, setClaimTarget] = useState(null);
     const topRef = useRef(null);
     const now = Date.now();
+    // Set of unclaimed driver names
+    const unclaimedNames = new Set(drivers.filter(d => !d.claimed).map(d => d.name));
     useEffect(() => {
         topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, [recentLaps.length]);
@@ -66,23 +72,34 @@ export default function LapFeed({ filterDriver }) {
     if (laps.length === 0)
         return (_jsx("div", { style: { padding: '50px 16px', textAlign: 'center', color: '#1e1e1e', fontFamily: 'var(--font-display)', letterSpacing: '0.15em', fontSize: 12 }, children: "NO LAPS YET" }));
     const displayLaps = laps.slice(0, 40);
-    return (_jsxs("div", { children: [validLaps.length > 0 && (_jsx("div", { style: { display: 'flex', gap: 1, borderBottom: '1px solid var(--border)' }, children: [
-                    { label: 'BEST', value: formatLapTime(sessionBestMs), highlight: true },
-                    { label: 'AVERAGE', value: avgMs ? formatLapTime(Math.round(avgMs)) : '—', highlight: false },
-                    { label: 'THEORY BEST', value: theoreticalBest ? formatLapTime(theoreticalBest) : '—', highlight: false },
-                    { label: 'CONSISTENCY', value: stdDev ? `±${(stdDev / 1000).toFixed(2)}s` : '—', highlight: false },
-                    { label: 'VALID LAPS', value: `${validLaps.length} / ${laps.length}`, highlight: false },
-                ].map(s => (_jsxs("div", { style: { flex: 1, padding: '10px 12px', borderRight: '1px solid var(--border)', textAlign: 'center', position: 'relative', overflow: 'hidden' }, children: [s.highlight && _jsx("div", { style: { position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, var(--accent), transparent)', opacity: 0.5 } }), _jsx("div", { style: { fontSize: 8, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: '0.12em', marginBottom: 4 }, children: s.label }), _jsx("div", { style: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, color: s.highlight ? 'var(--accent-hot)' : 'var(--chrome-light)', letterSpacing: '0.03em' }, children: s.value })] }, s.label))) })), _jsx("div", { ref: topRef }), _jsxs("table", { children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { style: { width: 20 } }), _jsx("th", { style: { width: 28 }, children: "#" }), _jsx("th", { children: "DRIVER" }), _jsx("th", { children: "TIME" }), _jsx("th", { children: "DELTA" }), _jsx("th", { children: "S1" }), _jsx("th", { children: "S2" }), _jsx("th", { children: "CAR" })] }) }), _jsx("tbody", { children: displayLaps.map((lap, idx) => {
-                            const isNew = now - lap.timestamp < 2000;
-                            const pulseClass = isNew && lap.isPB ? 'lap-pulse' : isNew ? 'lap-new' : '';
-                            const timeClass = !lap.valid ? 'lap-invalid' : lap.isPB ? 'lap-pb' : lap.isSessionBest ? 'lap-session' : '';
-                            const trend = lapTrend(displayLaps, idx);
-                            const bestS1 = driverBestS1.get(lap.driverName) ?? Infinity;
-                            const bestS2 = driverBestS2.get(lap.driverName) ?? Infinity;
-                            return (_jsxs("tr", { className: pulseClass, children: [_jsx("td", { style: { width: 20, padding: '10px 4px' }, children: trend && _jsx("span", { style: { fontSize: 9, color: trend.color, fontWeight: 700 }, children: trend.sym }) }), _jsx("td", { style: { color: 'var(--text-muted)', fontSize: 10, fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }, children: lap.lapNumber || '—' }), _jsx("td", { style: { fontWeight: 600, fontSize: 13 }, children: lap.driverName }), _jsx("td", { className: timeClass, style: { fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700 }, children: formatLapTime(lap.lapTimeMs) }), _jsx("td", { style: {
-                                            fontFamily: 'var(--font-mono)', fontSize: 11,
-                                            color: !lap.valid ? 'var(--text-muted)' : lap.lapTimeMs === sessionBestMs ? 'var(--accent-hot)' : '#888',
-                                            fontWeight: lap.lapTimeMs === sessionBestMs ? 700 : 400,
-                                        }, children: lap.valid ? formatDelta(lap.lapTimeMs, sessionBestMs) : '—' }), _jsx("td", { style: { fontFamily: 'var(--font-mono)', fontSize: 11, color: sectorColor(lap.split1Ms, bestS1) }, children: lap.split1Ms ? formatLapTime(lap.split1Ms) : '—' }), _jsx("td", { style: { fontFamily: 'var(--font-mono)', fontSize: 11, color: sectorColor(lap.split2Ms, bestS2) }, children: lap.split2Ms ? formatLapTime(lap.split2Ms) : '—' }), _jsx("td", { style: { fontSize: 10, color: 'var(--text-muted)' }, children: lap.carModel.replace(/_/g, ' ') })] }, lap.id));
-                        }) })] })] }));
+    return (_jsxs(_Fragment, { children: [claimTarget && (_jsx(ClaimModal, { driverName: claimTarget, onClose: () => setClaimTarget(null), onClaimed: () => {
+                    setClaimTarget(null);
+                    const d = drivers.find(x => x.name === claimTarget);
+                    if (d)
+                        markClaimed(d.name, d.color);
+                } })), _jsxs("div", { children: [validLaps.length > 0 && (_jsx("div", { style: { display: 'flex', gap: 1, borderBottom: '1px solid var(--border)' }, children: [
+                            { label: 'BEST', value: formatLapTime(sessionBestMs), highlight: true },
+                            { label: 'AVERAGE', value: avgMs ? formatLapTime(Math.round(avgMs)) : '—', highlight: false },
+                            { label: 'THEORY BEST', value: theoreticalBest ? formatLapTime(theoreticalBest) : '—', highlight: false },
+                            { label: 'CONSISTENCY', value: stdDev ? `±${(stdDev / 1000).toFixed(2)}s` : '—', highlight: false },
+                            { label: 'VALID LAPS', value: `${validLaps.length} / ${laps.length}`, highlight: false },
+                        ].map(s => (_jsxs("div", { style: { flex: 1, padding: '10px 12px', borderRight: '1px solid var(--border)', textAlign: 'center', position: 'relative', overflow: 'hidden' }, children: [s.highlight && _jsx("div", { style: { position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, var(--accent), transparent)', opacity: 0.5 } }), _jsx("div", { style: { fontSize: 8, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: '0.12em', marginBottom: 4 }, children: s.label }), _jsx("div", { style: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, color: s.highlight ? 'var(--accent-hot)' : 'var(--chrome-light)', letterSpacing: '0.03em' }, children: s.value })] }, s.label))) })), _jsx("div", { ref: topRef }), _jsxs("table", { children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { style: { width: 20 } }), _jsx("th", { style: { width: 28 }, children: "#" }), _jsx("th", { children: "DRIVER" }), _jsx("th", { children: "TIME" }), _jsx("th", { children: "DELTA" }), _jsx("th", { children: "S1" }), _jsx("th", { children: "S2" }), _jsx("th", { children: "CAR" })] }) }), _jsx("tbody", { children: displayLaps.map((lap, idx) => {
+                                    const isNew = now - lap.timestamp < 2000;
+                                    const pulseClass = isNew && lap.isPB ? 'lap-pulse' : isNew ? 'lap-new' : '';
+                                    const timeClass = !lap.valid ? 'lap-invalid' : lap.isPB ? 'lap-pb' : lap.isSessionBest ? 'lap-session' : '';
+                                    const trend = lapTrend(displayLaps, idx);
+                                    const bestS1 = driverBestS1.get(lap.driverName) ?? Infinity;
+                                    const bestS2 = driverBestS2.get(lap.driverName) ?? Infinity;
+                                    return (_jsxs("tr", { className: pulseClass, children: [_jsx("td", { style: { width: 20, padding: '10px 4px' }, children: trend && _jsx("span", { style: { fontSize: 9, color: trend.color, fontWeight: 700 }, children: trend.sym }) }), _jsx("td", { style: { color: 'var(--text-muted)', fontSize: 10, fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }, children: lap.lapNumber || '—' }), _jsx("td", { style: { fontWeight: 600, fontSize: 13 }, children: _jsxs("span", { style: { display: 'flex', alignItems: 'center', gap: 8 }, children: [lap.driverName, !selected && unclaimedNames.has(lap.driverName) && (_jsx("button", { onClick: () => setClaimTarget(lap.driverName), style: {
+                                                                fontFamily: 'var(--font-display)', fontSize: 8, fontWeight: 700,
+                                                                letterSpacing: '0.08em', padding: '2px 7px',
+                                                                background: 'rgba(204,0,0,0.15)', color: 'var(--accent-hot)',
+                                                                border: '1px solid #440000', borderRadius: 0, cursor: 'pointer',
+                                                                whiteSpace: 'nowrap',
+                                                            }, children: "THIS IS ME!" }))] }) }), _jsx("td", { className: timeClass, style: { fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700 }, children: formatLapTime(lap.lapTimeMs) }), _jsx("td", { style: {
+                                                    fontFamily: 'var(--font-mono)', fontSize: 11,
+                                                    color: !lap.valid ? 'var(--text-muted)' : lap.lapTimeMs === sessionBestMs ? 'var(--accent-hot)' : '#888',
+                                                    fontWeight: lap.lapTimeMs === sessionBestMs ? 700 : 400,
+                                                }, children: lap.valid ? formatDelta(lap.lapTimeMs, sessionBestMs) : '—' }), _jsx("td", { style: { fontFamily: 'var(--font-mono)', fontSize: 11, color: sectorColor(lap.split1Ms, bestS1) }, children: lap.split1Ms ? formatLapTime(lap.split1Ms) : '—' }), _jsx("td", { style: { fontFamily: 'var(--font-mono)', fontSize: 11, color: sectorColor(lap.split2Ms, bestS2) }, children: lap.split2Ms ? formatLapTime(lap.split2Ms) : '—' }), _jsx("td", { style: { fontSize: 10, color: 'var(--text-muted)' }, children: lap.carModel.replace(/_/g, ' ') })] }, lap.id));
+                                }) })] })] })] }));
 }

@@ -16,12 +16,22 @@ function KeyboardShortcuts() {
       if (e.key === 'l' || e.key === 'L') navigate('/leaderboard');
       if (e.key === 'h' || e.key === 'H') navigate('/history');
       if (e.key === 'd' || e.key === 'D') navigate('/drivers');
-      if (e.key === ' ')                   { e.preventDefault(); navigate('/'); }
+      if (e.key === ' ')                   { e.preventDefault(); navigate('/live'); }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [navigate]);
   return null;
+}
+
+function HomeRoute() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('laptracker_driver') ?? 'null');
+    if (stored?.claimed && stored?.name) {
+      return <Navigate to={`/drivers/${encodeURIComponent(stored.name)}`} replace />;
+    }
+  } catch {}
+  return <LivePage />;
 }
 
 export default function App() {
@@ -30,11 +40,12 @@ export default function App() {
       <KeyboardShortcuts />
       <Routes>
         <Route element={<Shell />}>
-          <Route path="/"              element={<LivePage />} />
+          <Route path="/"              element={<HomeRoute />} />
+          <Route path="/live"          element={<LivePage />} />
           <Route path="/history"       element={<HistoryPage />} />
           <Route path="/history/:id"   element={<SessionDetail />} />
           <Route path="/leaderboard"   element={<LeaderboardPage />} />
-          <Route path="/drivers"        element={<DriversPageWrapper />} />
+          <Route path="/drivers"       element={<DriversPageWrapper />} />
           <Route path="/drivers/:name" element={<DriverPage />} />
           <Route path="*"              element={<Navigate to="/" replace />} />
         </Route>

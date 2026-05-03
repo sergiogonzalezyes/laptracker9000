@@ -53,7 +53,7 @@ export default function NavBar() {
 
       <nav style={{ display: 'flex', gap: 2 }}>
         {[
-          { to: '/', label: 'Live', end: true },
+          { to: '/live', label: 'Live', end: false },
           { to: '/history', label: 'History', end: false },
           { to: '/leaderboard', label: 'Leaderboard', end: false },
           { to: '/drivers', label: 'Drivers', end: false },

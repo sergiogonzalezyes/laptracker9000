@@ -2,18 +2,25 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api, formatLapTime, trackDisplayName } from '../api/client';
+import { useDriverTheme } from '../hooks/useDriverTheme';
 export default function DriverPage() {
     const { name } = useParams();
+    const { selected, refreshColor } = useDriverTheme();
     const [profile, setProfile] = useState(null);
     const [color, setColor] = useState('#cc0000');
     const [tagline, setTagline] = useState('');
+    const [pin, setPin] = useState('');
+    const [showPin, setShowPin] = useState(false);
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
+    const [saveError, setSaveError] = useState('');
     const [notFound, setNotFound] = useState(false);
+    const decodedName = name ? decodeURIComponent(name) : '';
+    const isMyProfile = selected?.name === decodedName && selected?.claimed;
     useEffect(() => {
         if (!name)
             return;
-        api.driverProfile(decodeURIComponent(name))
+        api.driverProfile(decodedName)
             .then(p => {
             setProfile(p);
             setColor(p.color || '#cc0000');
@@ -24,13 +31,27 @@ export default function DriverPage() {
     const handleSave = async () => {
         if (!name)
             return;
+        if (!pin || !/^\d{4}$/.test(pin)) {
+            setSaveError('Enter your 4-digit PIN');
+            setShowPin(true);
+            return;
+        }
         setSaving(true);
-        await api.updateDriverProfile(decodeURIComponent(name), color, tagline);
+        setSaveError('');
+        const res = await api.updateDriverProfile(decodedName, pin, color, tagline);
+        if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            setSaveError(body.error ?? 'Incorrect PIN');
+            setSaving(false);
+            return;
+        }
         setSaving(false);
         setSaved(true);
+        setPin('');
+        setShowPin(false);
         setTimeout(() => setSaved(false), 2000);
-        // Refresh profile
-        api.driverProfile(decodeURIComponent(name)).then(setProfile);
+        refreshColor(decodedName, color);
+        api.driverProfile(decodedName).then(setProfile);
     };
     if (notFound)
         return (_jsxs("div", { style: { textAlign: 'center', padding: '80px 0' }, children: [_jsx("div", { style: { fontFamily: 'var(--font-display)', fontSize: 14, color: '#333', letterSpacing: '0.15em' }, children: "DRIVER NOT FOUND" }), _jsx(Link, { to: "/leaderboard", style: { color: 'var(--accent)', fontSize: 12, marginTop: 12, display: 'block' }, children: "\u2190 Back to Leaderboard" })] }));
@@ -72,15 +93,15 @@ export default function DriverPage() {
                                     color: color,
                                     textShadow: `0 0 20px ${color}88`,
                                     marginBottom: 6,
-                                }, children: profile.name.toUpperCase() }), _jsx("input", { type: "text", value: tagline, onChange: e => setTagline(e.target.value), placeholder: "Enter your tagline...", maxLength: 60, style: { width: '100%', maxWidth: 380, fontSize: 13, color: 'var(--text-secondary)', background: 'transparent', border: 'none', borderBottom: '1px solid #333', borderRadius: 0, padding: '4px 0', outline: 'none' }, onFocus: e => (e.target.style.borderBottomColor = color), onBlur: e => (e.target.style.borderBottomColor = '#333') }), _jsxs("div", { style: { marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }, children: [_jsx("button", { onClick: handleSave, disabled: saving, style: {
-                                            fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700,
-                                            letterSpacing: '0.1em', padding: '6px 16px',
-                                            background: saving ? '#333' : `linear-gradient(180deg, ${color} 0%, ${color}aa 100%)`,
-                                            color: '#fff', border: 'none', borderRadius: 0,
-                                            clipPath: 'polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%)',
-                                            cursor: saving ? 'default' : 'pointer',
-                                            boxShadow: saving ? 'none' : `0 0 12px ${color}66`,
-                                        }, children: saving ? 'SAVING...' : saved ? '✓ SAVED' : 'SAVE PROFILE' }), _jsx("span", { style: { fontSize: 10, color: '#333', fontFamily: 'var(--font-display)' }, children: "Click the color dot to change your card color" })] })] }), _jsx("div", { style: { display: 'flex', gap: 1, flexShrink: 0 }, children: [
+                                }, children: profile.name.toUpperCase() }), _jsx("input", { type: "text", value: tagline, onChange: e => setTagline(e.target.value), placeholder: "Enter your tagline...", maxLength: 60, style: { width: '100%', maxWidth: 380, fontSize: 13, color: 'var(--text-secondary)', background: 'transparent', border: 'none', borderBottom: '1px solid #333', borderRadius: 0, padding: '4px 0', outline: 'none' }, onFocus: e => (e.target.style.borderBottomColor = color), onBlur: e => (e.target.style.borderBottomColor = '#333') }), isMyProfile && (_jsxs("div", { style: { marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }, children: [(showPin || saving) && (_jsxs("div", { style: { display: 'flex', alignItems: 'center', gap: 8 }, children: [_jsx("input", { type: "password", inputMode: "numeric", maxLength: 4, value: pin, onChange: e => { setPin(e.target.value.replace(/\D/g, '')); setSaveError(''); }, placeholder: "PIN", onKeyDown: e => e.key === 'Enter' && handleSave(), style: { width: 80, textAlign: 'center', letterSpacing: '0.2em', fontSize: 16, padding: '5px 8px' }, autoFocus: true }), saveError && _jsx("span", { style: { fontSize: 10, color: 'var(--red)', fontFamily: 'var(--font-display)' }, children: saveError })] })), _jsxs("div", { style: { display: 'flex', gap: 8, alignItems: 'center' }, children: [_jsx("button", { onClick: showPin ? handleSave : () => setShowPin(true), disabled: saving, style: {
+                                                    fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700,
+                                                    letterSpacing: '0.1em', padding: '6px 16px',
+                                                    background: saving ? '#333' : `linear-gradient(180deg, ${color} 0%, ${color}aa 100%)`,
+                                                    color: '#fff', border: 'none', borderRadius: 0,
+                                                    clipPath: 'polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%)',
+                                                    cursor: saving ? 'default' : 'pointer',
+                                                    boxShadow: saving ? 'none' : `0 0 12px ${color}66`,
+                                                }, children: saving ? 'SAVING...' : saved ? '✓ SAVED' : showPin ? 'CONFIRM SAVE' : 'SAVE PROFILE' }), !showPin && (_jsx("span", { style: { fontSize: 10, color: '#333', fontFamily: 'var(--font-display)' }, children: "Click the color swatch to change" }))] })] })), !isMyProfile && profile?.claimed && (_jsx("div", { style: { marginTop: 12, fontSize: 10, color: '#333', fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }, children: "SELECT THIS DRIVER FROM THE MENU TO EDIT" }))] }), _jsx("div", { style: { display: 'flex', gap: 1, flexShrink: 0 }, children: [
                             { label: 'LAPS', value: String(stats.total_laps) },
                             { label: 'TRACKS', value: String(stats.track_count) },
                             { label: 'BEST', value: stats.best_lap_ms ? formatLapTime(stats.best_lap_ms) : '—', mono: true },

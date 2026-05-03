@@ -1,6 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLiveStore, LiveLap } from '../../store/liveStore';
 import { formatLapTime } from '../../api/client';
+import { useDriverTheme } from '../../hooks/useDriverTheme';
+import ClaimModal from '../ClaimModal';
 
 // Sector color: compare sector time to driver's personal best sector
 function sectorColor(ms: number | null | undefined, bestMs: number): string {
@@ -29,8 +31,13 @@ function formatDelta(ms: number, bestMs: number): string {
 
 export default function LapFeed({ filterDriver }: { filterDriver?: string | null }) {
   const { recentLaps } = useLiveStore();
+  const { selected, drivers, markClaimed } = useDriverTheme();
+  const [claimTarget, setClaimTarget] = useState<string | null>(null);
   const topRef = useRef<HTMLDivElement>(null);
   const now = Date.now();
+
+  // Set of unclaimed driver names
+  const unclaimedNames = new Set(drivers.filter(d => !d.claimed).map(d => d.name));
 
   useEffect(() => {
     topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -69,6 +76,18 @@ export default function LapFeed({ filterDriver }: { filterDriver?: string | null
   const displayLaps = laps.slice(0, 40);
 
   return (
+    <>
+    {claimTarget && (
+      <ClaimModal
+        driverName={claimTarget}
+        onClose={() => setClaimTarget(null)}
+        onClaimed={() => {
+          setClaimTarget(null);
+          const d = drivers.find(x => x.name === claimTarget);
+          if (d) markClaimed(d.name, d.color);
+        }}
+      />
+    )}
     <div>
       {/* Stats bar */}
       {validLaps.length > 0 && (
@@ -123,7 +142,25 @@ export default function LapFeed({ filterDriver }: { filterDriver?: string | null
                 <td style={{ color: 'var(--text-muted)', fontSize: 10, fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>
                   {lap.lapNumber || '—'}
                 </td>
-                <td style={{ fontWeight: 600, fontSize: 13 }}>{lap.driverName}</td>
+                <td style={{ fontWeight: 600, fontSize: 13 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {lap.driverName}
+                    {!selected && unclaimedNames.has(lap.driverName) && (
+                      <button
+                        onClick={() => setClaimTarget(lap.driverName)}
+                        style={{
+                          fontFamily: 'var(--font-display)', fontSize: 8, fontWeight: 700,
+                          letterSpacing: '0.08em', padding: '2px 7px',
+                          background: 'rgba(204,0,0,0.15)', color: 'var(--accent-hot)',
+                          border: '1px solid #440000', borderRadius: 0, cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        THIS IS ME!
+                      </button>
+                    )}
+                  </span>
+                </td>
                 <td className={timeClass} style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700 }}>
                   {formatLapTime(lap.lapTimeMs)}
                 </td>
@@ -149,5 +186,6 @@ export default function LapFeed({ filterDriver }: { filterDriver?: string | null
         </tbody>
       </table>
     </div>
+    </>
   );
 }

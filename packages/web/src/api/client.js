@@ -15,11 +15,21 @@ export const api = {
     drivers: () => get('/leaderboard/drivers'),
     allDrivers: () => get('/drivers'),
     driverProfile: (name) => get(`/drivers/${encodeURIComponent(name)}`),
-    updateDriverProfile: (name, color, tagline) => fetch(`/api/drivers/${encodeURIComponent(name)}/profile`, {
+    updateDriverProfile: (name, pin, color, tagline) => fetch(`/api/drivers/${encodeURIComponent(name)}/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ color, tagline }),
+        body: JSON.stringify({ pin, color, tagline }),
     }),
+    claimDriver: (name, pin, color, tagline) => fetch(`/api/drivers/${encodeURIComponent(name)}/claim`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin, color, tagline }),
+    }),
+    verifyPin: (name, pin) => fetch(`/api/drivers/${encodeURIComponent(name)}/verify-pin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin }),
+    }).then(r => r.json()),
 };
 // ── Format helpers ──────────────────────────────────────────────────────────
 export function formatLapTime(ms) {

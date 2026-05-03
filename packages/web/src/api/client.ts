@@ -70,6 +70,7 @@ export interface DriverSummary {
   track_count: number;
   color: string;
   tagline: string;
+  claimed: number;
 }
 
 export interface DriverProfile {
@@ -77,6 +78,7 @@ export interface DriverProfile {
   name: string;
   color: string;
   tagline: string;
+  claimed: number;
   favCar: string;
   stats: { total_laps: number; valid_laps: number; best_lap_ms: number | null; track_count: number };
   trackBests: { track: string; best_ms: number; car_model: string }[];
@@ -93,12 +95,24 @@ export const api = {
   drivers:       ()             => get<DriverStats[]>('/leaderboard/drivers'),
   allDrivers:    ()             => get<DriverSummary[]>('/drivers'),
   driverProfile: (name: string) => get<DriverProfile>(`/drivers/${encodeURIComponent(name)}`),
-  updateDriverProfile: (name: string, color: string, tagline: string) =>
+  updateDriverProfile: (name: string, pin: string, color: string, tagline: string) =>
     fetch(`/api/drivers/${encodeURIComponent(name)}/profile`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ color, tagline }),
+      body: JSON.stringify({ pin, color, tagline }),
     }),
+  claimDriver: (name: string, pin: string, color: string, tagline: string) =>
+    fetch(`/api/drivers/${encodeURIComponent(name)}/claim`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin, color, tagline }),
+    }),
+  verifyPin: (name: string, pin: string) =>
+    fetch(`/api/drivers/${encodeURIComponent(name)}/verify-pin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin }),
+    }).then(r => r.json() as Promise<{ ok: boolean }>),
 };
 
 // ── Format helpers ──────────────────────────────────────────────────────────

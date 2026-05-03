@@ -37,7 +37,11 @@ function resetTheme() {
   root.style.setProperty('--accent-dim', '#2a0000');
 }
 
-export interface StoredDriver { name: string; color: string; }
+export interface StoredDriver {
+  name: string;
+  color: string;
+  claimed: boolean;
+}
 
 export function useDriverTheme() {
   const [drivers, setDrivers] = useState<DriverSummary[]>([]);
@@ -45,19 +49,17 @@ export function useDriverTheme() {
     try { return JSON.parse(localStorage.getItem(LS_KEY) ?? 'null'); } catch { return null; }
   });
 
-  // Apply theme on mount from localStorage immediately
   useEffect(() => {
     if (selected?.color) applyTheme(selected.color);
   }, []);
 
-  // Load driver list
   useEffect(() => {
     api.allDrivers().then(setDrivers);
   }, []);
 
-  const selectDriver = (d: DriverSummary | null) => {
+  const selectDriver = (d: Pick<DriverSummary, 'name' | 'color' | 'claimed'> | null) => {
     if (d) {
-      const stored: StoredDriver = { name: d.name, color: d.color };
+      const stored: StoredDriver = { name: d.name, color: d.color, claimed: !!d.claimed };
       localStorage.setItem(LS_KEY, JSON.stringify(stored));
       setSelected(stored);
       applyTheme(d.color);
@@ -68,15 +70,21 @@ export function useDriverTheme() {
     }
   };
 
-  // If a driver updates their profile color, refresh
   const refreshColor = (name: string, color: string) => {
     if (selected?.name === name) {
-      const updated = { name, color };
+      const updated = { ...selected, color };
       localStorage.setItem(LS_KEY, JSON.stringify(updated));
       setSelected(updated);
       applyTheme(color);
     }
   };
 
-  return { drivers, selected, selectDriver, refreshColor };
+  const markClaimed = (name: string, color: string) => {
+    const updated: StoredDriver = { name, color, claimed: true };
+    localStorage.setItem(LS_KEY, JSON.stringify(updated));
+    setSelected(updated);
+    applyTheme(color);
+  };
+
+  return { drivers, selected, selectDriver, refreshColor, markClaimed };
 }

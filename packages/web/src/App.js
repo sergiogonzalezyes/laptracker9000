@@ -22,7 +22,7 @@ function KeyboardShortcuts() {
                 navigate('/drivers');
             if (e.key === ' ') {
                 e.preventDefault();
-                navigate('/');
+                navigate('/live');
             }
         };
         window.addEventListener('keydown', handler);
@@ -30,6 +30,16 @@ function KeyboardShortcuts() {
     }, [navigate]);
     return null;
 }
+function HomeRoute() {
+    try {
+        const stored = JSON.parse(localStorage.getItem('laptracker_driver') ?? 'null');
+        if (stored?.claimed && stored?.name) {
+            return _jsx(Navigate, { to: `/drivers/${encodeURIComponent(stored.name)}`, replace: true });
+        }
+    }
+    catch { }
+    return _jsx(LivePage, {});
+}
 export default function App() {
-    return (_jsxs(BrowserRouter, { children: [_jsx(KeyboardShortcuts, {}), _jsx(Routes, { children: _jsxs(Route, { element: _jsx(Shell, {}), children: [_jsx(Route, { path: "/", element: _jsx(LivePage, {}) }), _jsx(Route, { path: "/history", element: _jsx(HistoryPage, {}) }), _jsx(Route, { path: "/history/:id", element: _jsx(SessionDetail, {}) }), _jsx(Route, { path: "/leaderboard", element: _jsx(LeaderboardPage, {}) }), _jsx(Route, { path: "/drivers", element: _jsx(DriversPageWrapper, {}) }), _jsx(Route, { path: "/drivers/:name", element: _jsx(DriverPage, {}) }), _jsx(Route, { path: "*", element: _jsx(Navigate, { to: "/", replace: true }) })] }) })] }));
+    return (_jsxs(BrowserRouter, { children: [_jsx(KeyboardShortcuts, {}), _jsx(Routes, { children: _jsxs(Route, { element: _jsx(Shell, {}), children: [_jsx(Route, { path: "/", element: _jsx(HomeRoute, {}) }), _jsx(Route, { path: "/live", element: _jsx(LivePage, {}) }), _jsx(Route, { path: "/history", element: _jsx(HistoryPage, {}) }), _jsx(Route, { path: "/history/:id", element: _jsx(SessionDetail, {}) }), _jsx(Route, { path: "/leaderboard", element: _jsx(LeaderboardPage, {}) }), _jsx(Route, { path: "/drivers", element: _jsx(DriversPageWrapper, {}) }), _jsx(Route, { path: "/drivers/:name", element: _jsx(DriverPage, {}) }), _jsx(Route, { path: "*", element: _jsx(Navigate, { to: "/", replace: true }) })] }) })] }));
 }

@@ -37,7 +37,7 @@ export default function NavBar() {
                     background: `linear-gradient(90deg, transparent 0%, ${accentColor} 30%, ${accentColor}cc 50%, ${accentColor} 70%, transparent 100%)`,
                     transition: 'background 0.4s',
                 } }), _jsxs("span", { style: { fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 17, marginRight: 24, letterSpacing: '0.08em', userSelect: 'none' }, children: [_jsx("span", { className: "chrome", children: "LAP" }), _jsx("span", { style: { color: 'var(--accent)', textShadow: '0 0 12px var(--accent)66', transition: 'color 0.4s, text-shadow 0.4s' }, children: "TRACKER" }), _jsx("span", { style: { color: 'var(--text-muted)', fontSize: 11, marginLeft: 4 }, children: "9000" })] }), _jsx("nav", { style: { display: 'flex', gap: 2 }, children: [
-                    { to: '/', label: 'Live', end: true },
+                    { to: '/live', label: 'Live', end: false },
                     { to: '/history', label: 'History', end: false },
                     { to: '/leaderboard', label: 'Leaderboard', end: false },
                     { to: '/drivers', label: 'Drivers', end: false },

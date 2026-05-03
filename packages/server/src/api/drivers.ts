@@ -1,7 +1,12 @@
 import { Router } from 'express';
+import { createHash } from 'crypto';
 import { getDb } from '../db/database';
 
 export const driversRouter = Router();
+
+function hashPin(pin: string): string {
+  return createHash('sha256').update(`laptracker:${pin}`).digest('hex');
+}
 
 driversRouter.get('/', (_req, res) => {
   const db = getDb();
@@ -11,8 +16,9 @@ driversRouter.get('/', (_req, res) => {
            SUM(l.valid)                                           AS valid_laps,
            MIN(CASE WHEN l.valid = 1 THEN l.lap_time_ms END)     AS best_lap_ms,
            COUNT(DISTINCT s.track)                                AS track_count,
-           COALESCE(p.color,   '#cc0000') AS color,
-           COALESCE(p.tagline, '')        AS tagline
+           COALESCE(p.color,   '#cc0000')          AS color,
+           COALESCE(p.tagline, '')                 AS tagline,
+           CASE WHEN p.pin_hash != '' AND p.pin_hash IS NOT NULL THEN 1 ELSE 0 END AS claimed
     FROM drivers d
     LEFT JOIN laps l     ON l.driver_id  = d.id
     LEFT JOIN sessions s ON l.session_id = s.id
@@ -30,11 +36,12 @@ driversRouter.get('/:name', (req, res) => {
   const driver = db.prepare(`
     SELECT d.id, d.name,
            COALESCE(p.color,   '#cc0000') AS color,
-           COALESCE(p.tagline, '')        AS tagline
+           COALESCE(p.tagline, '')        AS tagline,
+           CASE WHEN p.pin_hash != '' AND p.pin_hash IS NOT NULL THEN 1 ELSE 0 END AS claimed
     FROM drivers d
     LEFT JOIN driver_profiles p ON p.driver_id = d.id
     WHERE d.name = ?
-  `).get(name) as { id: number; name: string; color: string; tagline: string } | undefined;
+  `).get(name) as { id: number; name: string; color: string; tagline: string; claimed: number } | undefined;
 
   if (!driver) return res.status(404).json({ error: 'Driver not found' });
 
@@ -55,9 +62,7 @@ driversRouter.get('/:name', (req, res) => {
   `).get(driver.id) as { car_model: string } | undefined;
 
   const trackBests = db.prepare(`
-    SELECT s.track,
-           MIN(l.lap_time_ms) AS best_ms,
-           l.car_model
+    SELECT s.track, MIN(l.lap_time_ms) AS best_ms, l.car_model
     FROM laps l
     JOIN sessions s ON l.session_id = s.id
     WHERE l.driver_id = ? AND l.valid = 1
@@ -80,18 +85,77 @@ driversRouter.get('/:name', (req, res) => {
   res.json({ ...driver, stats, favCar: favCar?.car_model ?? '', trackBests, recentSessions });
 });
 
-driversRouter.put('/:name/profile', (req, res) => {
+// Claim an unclaimed driver — sets PIN + initial profile
+driversRouter.post('/:name/claim', (req, res) => {
   const db = getDb();
   const { name } = req.params;
-  const { color, tagline } = req.body as { color?: string; tagline?: string };
+  const { pin, color, tagline } = req.body as { pin: string; color?: string; tagline?: string };
+
+  if (!pin || !/^\d{4}$/.test(pin)) {
+    return res.status(400).json({ error: 'PIN must be exactly 4 digits' });
+  }
 
   const driver = db.prepare('SELECT id FROM drivers WHERE name = ?').get(name) as { id: number } | undefined;
   if (!driver) return res.status(404).json({ error: 'Driver not found' });
 
+  // Check if already claimed
+  const existing = db.prepare('SELECT pin_hash FROM driver_profiles WHERE driver_id = ?').get(driver.id) as { pin_hash: string } | undefined;
+  if (existing?.pin_hash) {
+    return res.status(409).json({ error: 'Driver already claimed' });
+  }
+
   db.prepare(`
-    INSERT INTO driver_profiles (driver_id, color, tagline) VALUES (?, ?, ?)
+    INSERT INTO driver_profiles (driver_id, color, tagline, pin_hash) VALUES (?, ?, ?, ?)
+    ON CONFLICT(driver_id) DO UPDATE SET
+      color    = excluded.color,
+      tagline  = excluded.tagline,
+      pin_hash = excluded.pin_hash
+  `).run(driver.id, color ?? '#cc0000', tagline ?? '', hashPin(pin));
+
+  res.json({ ok: true });
+});
+
+// Verify PIN — returns ok:true/false
+driversRouter.post('/:name/verify-pin', (req, res) => {
+  const db = getDb();
+  const { name } = req.params;
+  const { pin } = req.body as { pin: string };
+
+  if (!pin) return res.status(400).json({ error: 'PIN required' });
+
+  const row = db.prepare(`
+    SELECT p.pin_hash FROM driver_profiles p
+    JOIN drivers d ON p.driver_id = d.id
+    WHERE d.name = ?
+  `).get(name) as { pin_hash: string } | undefined;
+
+  if (!row?.pin_hash) return res.status(404).json({ error: 'Driver not claimed' });
+
+  res.json({ ok: hashPin(pin) === row.pin_hash });
+});
+
+// Update profile — requires PIN
+driversRouter.put('/:name/profile', (req, res) => {
+  const db = getDb();
+  const { name } = req.params;
+  const { pin, color, tagline } = req.body as { pin?: string; color?: string; tagline?: string };
+
+  const driver = db.prepare('SELECT id FROM drivers WHERE name = ?').get(name) as { id: number } | undefined;
+  if (!driver) return res.status(404).json({ error: 'Driver not found' });
+
+  const existing = db.prepare('SELECT pin_hash FROM driver_profiles WHERE driver_id = ?').get(driver.id) as { pin_hash: string } | undefined;
+
+  // If claimed, require correct PIN
+  if (existing?.pin_hash) {
+    if (!pin || hashPin(pin) !== existing.pin_hash) {
+      return res.status(401).json({ error: 'Incorrect PIN' });
+    }
+  }
+
+  db.prepare(`
+    INSERT INTO driver_profiles (driver_id, color, tagline, pin_hash) VALUES (?, ?, ?, ?)
     ON CONFLICT(driver_id) DO UPDATE SET color = excluded.color, tagline = excluded.tagline
-  `).run(driver.id, color ?? '#cc0000', tagline ?? '');
+  `).run(driver.id, color ?? '#cc0000', tagline ?? '', existing?.pin_hash ?? '');
 
   res.json({ ok: true });
 });

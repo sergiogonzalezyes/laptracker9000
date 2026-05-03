@@ -43,7 +43,8 @@ CREATE TABLE IF NOT EXISTS ingested_files (
 CREATE TABLE IF NOT EXISTS driver_profiles (
   driver_id INTEGER PRIMARY KEY REFERENCES drivers(id),
   color     TEXT NOT NULL DEFAULT '#cc0000',
-  tagline   TEXT NOT NULL DEFAULT ''
+  tagline   TEXT NOT NULL DEFAULT '',
+  pin_hash  TEXT NOT NULL DEFAULT ''
 );
 
 CREATE INDEX IF NOT EXISTS idx_laps_session    ON laps(session_id);

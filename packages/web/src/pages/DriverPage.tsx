@@ -1,19 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api, DriverProfile, formatLapTime, trackDisplayName } from '../api/client';
+import { useDriverTheme } from '../hooks/useDriverTheme';
 
 export default function DriverPage() {
   const { name } = useParams<{ name: string }>();
+  const { selected, refreshColor } = useDriverTheme();
   const [profile, setProfile] = useState<DriverProfile | null>(null);
   const [color, setColor] = useState('#cc0000');
   const [tagline, setTagline] = useState('');
+  const [pin, setPin] = useState('');
+  const [showPin, setShowPin] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [notFound, setNotFound] = useState(false);
+
+  const decodedName = name ? decodeURIComponent(name) : '';
+  const isMyProfile = selected?.name === decodedName && selected?.claimed;
 
   useEffect(() => {
     if (!name) return;
-    api.driverProfile(decodeURIComponent(name))
+    api.driverProfile(decodedName)
       .then(p => {
         setProfile(p);
         setColor(p.color || '#cc0000');
@@ -24,13 +32,23 @@ export default function DriverPage() {
 
   const handleSave = async () => {
     if (!name) return;
+    if (!pin || !/^\d{4}$/.test(pin)) { setSaveError('Enter your 4-digit PIN'); setShowPin(true); return; }
     setSaving(true);
-    await api.updateDriverProfile(decodeURIComponent(name), color, tagline);
+    setSaveError('');
+    const res = await api.updateDriverProfile(decodedName, pin, color, tagline);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setSaveError(body.error ?? 'Incorrect PIN');
+      setSaving(false);
+      return;
+    }
     setSaving(false);
     setSaved(true);
+    setPin('');
+    setShowPin(false);
     setTimeout(() => setSaved(false), 2000);
-    // Refresh profile
-    api.driverProfile(decodeURIComponent(name)).then(setProfile);
+    refreshColor(decodedName, color);
+    api.driverProfile(decodedName).then(setProfile);
   };
 
   if (notFound) return (
@@ -118,22 +136,52 @@ export default function DriverPage() {
             onFocus={e => (e.target.style.borderBottomColor = color)}
             onBlur={e => (e.target.style.borderBottomColor = '#333')}
           />
-          <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
-            <button onClick={handleSave} disabled={saving} style={{
-              fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700,
-              letterSpacing: '0.1em', padding: '6px 16px',
-              background: saving ? '#333' : `linear-gradient(180deg, ${color} 0%, ${color}aa 100%)`,
-              color: '#fff', border: 'none', borderRadius: 0,
-              clipPath: 'polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%)',
-              cursor: saving ? 'default' : 'pointer',
-              boxShadow: saving ? 'none' : `0 0 12px ${color}66`,
-            }}>
-              {saving ? 'SAVING...' : saved ? '✓ SAVED' : 'SAVE PROFILE'}
-            </button>
-            <span style={{ fontSize: 10, color: '#333', fontFamily: 'var(--font-display)' }}>
-              Click the color dot to change your card color
-            </span>
-          </div>
+          {isMyProfile && (
+            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {(showPin || saving) && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={4}
+                    value={pin}
+                    onChange={e => { setPin(e.target.value.replace(/\D/g, '')); setSaveError(''); }}
+                    placeholder="PIN"
+                    onKeyDown={e => e.key === 'Enter' && handleSave()}
+                    style={{ width: 80, textAlign: 'center', letterSpacing: '0.2em', fontSize: 16, padding: '5px 8px' }}
+                    autoFocus
+                  />
+                  {saveError && <span style={{ fontSize: 10, color: 'var(--red)', fontFamily: 'var(--font-display)' }}>{saveError}</span>}
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <button
+                  onClick={showPin ? handleSave : () => setShowPin(true)}
+                  disabled={saving}
+                  style={{
+                    fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700,
+                    letterSpacing: '0.1em', padding: '6px 16px',
+                    background: saving ? '#333' : `linear-gradient(180deg, ${color} 0%, ${color}aa 100%)`,
+                    color: '#fff', border: 'none', borderRadius: 0,
+                    clipPath: 'polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%)',
+                    cursor: saving ? 'default' : 'pointer',
+                    boxShadow: saving ? 'none' : `0 0 12px ${color}66`,
+                  }}>
+                  {saving ? 'SAVING...' : saved ? '✓ SAVED' : showPin ? 'CONFIRM SAVE' : 'SAVE PROFILE'}
+                </button>
+                {!showPin && (
+                  <span style={{ fontSize: 10, color: '#333', fontFamily: 'var(--font-display)' }}>
+                    Click the color swatch to change
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+          {!isMyProfile && profile?.claimed && (
+            <div style={{ marginTop: 12, fontSize: 10, color: '#333', fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}>
+              SELECT THIS DRIVER FROM THE MENU TO EDIT
+            </div>
+          )}
         </div>
 
         {/* Quick stats */}

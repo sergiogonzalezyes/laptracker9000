@@ -142,9 +142,10 @@ export default function DriverPage() {
   const { stats, favCar, trackBests, recentSessions } = profile;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* Header card */}
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 14, overflow: 'hidden' }}>
+      {/* Header card — fixed height */}
       <div style={{
+        flexShrink: 0,
         background: 'linear-gradient(135deg, #111 0%, #0b0b0b 100%)',
         border: '1px solid #222',
         borderTop: `3px solid ${color}`,
@@ -275,12 +276,15 @@ export default function DriverPage() {
         </div>
       </div>
 
-      {/* Session progression chart — track-specific */}
+      {/* Session progression chart — fixed height */}
       {trackBests.length > 0 && (
-        <ProgressionSection driverName={decodedName} trackBests={trackBests} color={color} />
+        <div style={{ flexShrink: 0 }}>
+          <ProgressionSection driverName={decodedName} trackBests={trackBests} color={color} />
+        </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, maxHeight: 320 }}>
+      {/* Bottom grid — fills remaining space */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
         {/* Track bests */}
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           <div className="section-label" style={{ flexShrink: 0 }}>Track Records</div>
@@ -345,12 +349,6 @@ export default function DriverPage() {
         </div>
       </div>
 
-      {/* Fav car */}
-      {favCar && (
-        <div style={{ textAlign: 'center', fontSize: 11, color: '#333', fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }}>
-          FAVORITE CAR: <span style={{ color: 'var(--text-muted)' }}>{favCar.replace(/_/g, ' ').toUpperCase()}</span>
-        </div>
-      )}
     </div>
   );
 }

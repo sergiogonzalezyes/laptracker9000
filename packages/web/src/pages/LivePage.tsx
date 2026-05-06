@@ -22,14 +22,17 @@ export default function LivePage() {
   }, []);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <section>
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+      {/* Now Racing — natural height */}
+      <section style={{ flexShrink: 0 }}>
         <div className="section-label">Now Racing</div>
         <NowRacing focusedDriver={focusedDriver} onFocus={setFocusedDriver} />
       </section>
 
-      <section>
-        <div className="section-label" style={{ marginBottom: 0 }}>
+      {/* Recent Laps — fills remaining height */}
+      <section style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <div className="section-label" style={{ flexShrink: 0 }}>
           Recent Laps
           {focusedDriver && (
             <span style={{ marginLeft: 8, fontSize: 10, color: 'var(--accent-hot)', fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>
@@ -37,7 +40,7 @@ export default function LivePage() {
             </span>
           )}
         </div>
-        <div className="card" style={{ marginTop: 12 }}>
+        <div className="card" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
           <LapFeed filterDriver={focusedDriver} />
         </div>
       </section>

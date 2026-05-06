@@ -50,7 +50,7 @@ export default function SessionList() {
   });
 
   return (
-    <div>
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
       {/* Filters */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
         <input
@@ -79,8 +79,8 @@ export default function SessionList() {
         </span>
       </div>
 
-      <div className="card">
-        <div className="table-scroll">
+      <div className="card" style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'auto' }}>
         <table style={{ minWidth: 480 }}>
           <thead>
             <tr>

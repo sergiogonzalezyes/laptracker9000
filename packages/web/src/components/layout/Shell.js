@@ -14,5 +14,11 @@ export default function Shell() {
         ac_status: data => store.onAcStatus(data),
         ping: () => store.setConnected(true),
     });
-    return (_jsxs("div", { style: { display: 'flex', flexDirection: 'column', minHeight: '100vh' }, children: [_jsx(NavBar, {}), _jsx("main", { style: { flex: 1, padding: 'clamp(16px, 4vw, 32px)', maxWidth: 1200, margin: '0 auto', width: '100%' }, children: _jsx(Outlet, {}) })] }));
+    return (_jsxs("div", { style: { display: 'flex', flexDirection: 'column', minHeight: '100vh' }, children: [_jsx(NavBar, {}), _jsx("main", { style: {
+                    flex: 1, minHeight: 0,
+                    padding: 'clamp(16px, 4vw, 24px)',
+                    maxWidth: 1200, margin: '0 auto', width: '100%',
+                    display: 'flex', flexDirection: 'column',
+                    overflow: 'hidden',
+                }, children: _jsx(Outlet, {}) })] }));
 }

@@ -88,7 +88,7 @@ export default function LapFeed({ filterDriver }: { filterDriver?: string | null
   const displayLaps = laps.slice(0, 40);
 
   return (
-    <>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
     {claimTarget && (
       <ClaimModal
         driverName={claimTarget}
@@ -121,9 +121,9 @@ export default function LapFeed({ filterDriver }: { filterDriver?: string | null
         </div>
       )}
 
-      {/* Lap table */}
+      {/* Lap table — scrollable fill */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'auto' }}>
       <div ref={topRef} />
-      <div className="table-scroll">
       <table style={{ minWidth: 560 }}>
         <thead>
           <tr>
@@ -205,7 +205,7 @@ export default function LapFeed({ filterDriver }: { filterDriver?: string | null
         </tbody>
       </table>
       </div>
+      </div>
     </div>
-    </>
   );
 }

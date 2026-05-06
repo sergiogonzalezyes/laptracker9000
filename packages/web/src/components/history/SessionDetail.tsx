@@ -246,15 +246,12 @@ export default function SessionDetail() {
   const sessionBestMs = Math.min(...session.laps.filter(l => l.valid === 1).map(l => l.lap_time_ms), Infinity);
 
   return (
-    <div>
-      <div style={{ marginBottom: 20 }}>
-        <Link to="/history" style={{ color: 'var(--text-muted)', fontSize: 12, fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}>← HISTORY</Link>
-      </div>
-
-      {/* Header */}
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 20, flexWrap: 'wrap' }}>
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* Header row */}
+      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <Link to="/history" style={{ color: 'var(--text-muted)', fontSize: 12 }}>← History</Link>
         <span className={`badge badge-${session.session_type.toLowerCase()}`}>{session.session_type}</span>
-        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 22, letterSpacing: '0.05em' }}>
+        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, letterSpacing: '0.05em' }}>
           {trackDisplayName(session.track).toUpperCase()}
         </span>
         <span style={{ color: 'var(--text-muted)', fontSize: 11, fontFamily: 'var(--font-mono)' }}>
@@ -262,14 +259,17 @@ export default function SessionDetail() {
         </span>
       </div>
 
-      {/* Head-to-Head — only when 2+ drivers */}
+      {/* Head-to-Head — only when 2+ drivers, scrolls internally */}
       {driverNames.length >= 2 && (
-        <HeadToHead standings={standings} isMobile={isMobile} />
+        <div style={{ flexShrink: 0, maxHeight: 260, overflowY: 'auto' }}>
+          <HeadToHead standings={standings} isMobile={isMobile} />
+        </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '260px 1fr', gap: 16 }}>
-        {/* Standings sidebar */}
-        <div>
+      {/* Main grid — fills remaining height */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '240px 1fr', gap: 12 }}>
+        {/* Standings sidebar — scrollable */}
+        <div style={{ minHeight: 0, overflowY: 'auto' }}>
           <div className="section-label">Standings</div>
           <div className="card">
             {standings.map((s, i) => {
@@ -322,9 +322,9 @@ export default function SessionDetail() {
           </div>
         </div>
 
-        {/* Lap table */}
-        <div>
-          <div className="section-label">
+        {/* Lap table column — flex column, table fills remaining */}
+        <div style={{ minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+          <div className="section-label" style={{ flexShrink: 0 }}>
             {focusDriver ? focusDriver.toUpperCase() : `ALL LAPS`}
             <span style={{ marginLeft: 8, fontSize: 9, color: '#333' }}>({focusLaps.length} laps{focusDriver ? ' · click driver to deselect' : ''})</span>
           </div>
@@ -357,8 +357,8 @@ export default function SessionDetail() {
             </div>
           )}
 
-          <div className="card">
-            <div className="table-scroll">
+          <div className="card" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+            <div style={{ height: '100%', overflowY: 'auto', overflowX: 'auto' }}>
             <table style={{ minWidth: 560 }}>
               <thead>
                 <tr>

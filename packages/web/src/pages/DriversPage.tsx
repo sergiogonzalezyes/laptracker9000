@@ -2,21 +2,27 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, DriverSummary, formatLapTime } from '../api/client';
 
+const PER_PAGE = 12;
+
 export default function DriversPage() {
   const [drivers, setDrivers] = useState<DriverSummary[]>([]);
+  const [page, setPage] = useState(0);
 
   useEffect(() => { api.allDrivers().then(setDrivers); }, []);
 
   if (drivers.length === 0) return (
-    <div style={{ textAlign: 'center', padding: '80px 0', color: '#222', fontFamily: 'var(--font-display)', letterSpacing: '0.15em', fontSize: 12 }}>
-      NO DRIVERS YET
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333', fontSize: 13 }}>
+      No drivers yet — race first and claim your profile.
     </div>
   );
 
+  const totalPages = Math.ceil(drivers.length / PER_PAGE);
+  const pageDrivers = drivers.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
+
   return (
-    <div>
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: 10 }}>
-        {drivers.map(d => (
+        {pageDrivers.map(d => (
           <Link key={d.name} to={`/drivers/${encodeURIComponent(d.name)}`} style={{ textDecoration: 'none' }}>
             <div style={{
               background: 'linear-gradient(135deg, #111 0%, #0b0b0b 100%)',
@@ -84,6 +90,24 @@ export default function DriversPage() {
           </Link>
         ))}
       </div>
+
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
+            style={{ padding: '5px 12px', fontSize: 12, fontWeight: 600, background: 'var(--bg-elevated)', color: page === 0 ? 'var(--text-muted)' : 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: 6, cursor: page === 0 ? 'default' : 'pointer' }}>
+            ← Prev
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button key={i} onClick={() => setPage(i)} style={{ width: 28, height: 28, fontSize: 12, fontWeight: 600, background: i === page ? 'var(--accent)' : 'var(--bg-elevated)', color: i === page ? '#fff' : 'var(--text-muted)', border: `1px solid ${i === page ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 6, cursor: 'pointer' }}>
+              {i + 1}
+            </button>
+          ))}
+          <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1}
+            style={{ padding: '5px 12px', fontSize: 12, fontWeight: 600, background: 'var(--bg-elevated)', color: page === totalPages - 1 ? 'var(--text-muted)' : 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: 6, cursor: page === totalPages - 1 ? 'default' : 'pointer' }}>
+            Next →
+          </button>
+        </div>
+      )}
     </div>
   );
 }

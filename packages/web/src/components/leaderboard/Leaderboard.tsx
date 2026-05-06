@@ -130,7 +130,7 @@ export default function Leaderboard() {
   const isMobile = useIsMobile();
 
   return (
-    <div>
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 0 }}>
       {/* Track grid — paginated */}
       {(() => {
         const totalPages = Math.ceil(tracks.length / TRACKS_PER_PAGE);
@@ -243,9 +243,9 @@ export default function Leaderboard() {
         </div>
       )}
 
-      {/* Leaderboard table */}
-      <div className="card">
-        <div className="table-scroll">
+      {/* Leaderboard table — fills remaining height */}
+      <div className="card" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <div style={{ height: '100%', overflowY: 'auto', overflowX: 'auto' }}>
         <table style={{ minWidth: 600 }}>
           <thead>
             <tr>
@@ -354,3 +354,4 @@ export default function Leaderboard() {
     </div>
   );
 }
+

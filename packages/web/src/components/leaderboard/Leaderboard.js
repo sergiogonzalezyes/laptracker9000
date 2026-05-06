@@ -96,7 +96,7 @@ export default function Leaderboard() {
     const leaderMs = sorted[0]?.lap_time_ms ?? 0;
     const currentTrack = tracks.find(t => t.track === selectedTrack);
     const isMobile = useIsMobile();
-    return (_jsxs("div", { children: [(() => {
+    return (_jsxs("div", { style: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 0 }, children: [(() => {
                 const totalPages = Math.ceil(tracks.length / TRACKS_PER_PAGE);
                 const pageTracks = tracks.slice(trackPage * TRACKS_PER_PAGE, (trackPage + 1) * TRACKS_PER_PAGE);
                 return (_jsxs(_Fragment, { children: [_jsx("div", { style: {
@@ -140,7 +140,7 @@ export default function Leaderboard() {
                                 fontSize: s.big ? 22 : 16,
                                 fontWeight: 700,
                                 color: s.big ? 'var(--accent-hot)' : 'var(--text-primary)',
-                            }, children: s.value })] }, s.label))) })), _jsx("div", { className: "card", children: _jsx("div", { className: "table-scroll", children: _jsxs("table", { style: { minWidth: 600 }, children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { style: { width: 64, textAlign: 'center' }, children: "POS" }), _jsx(SortTh, { label: "Driver", col: "driver_name", sort: sort, dir: dir, onSort: handleSort }), _jsx(SortTh, { label: "Best Lap", col: "lap_time_ms", sort: sort, dir: dir, onSort: handleSort }), _jsx("th", { children: "Gap" }), _jsx("th", { children: "S1" }), _jsx("th", { children: "S2" }), _jsx("th", { children: "S3" }), _jsx(SortTh, { label: "Car", col: "car_model", sort: sort, dir: dir, onSort: handleSort }), _jsx(SortTh, { label: "Date", col: "completed_at", sort: sort, dir: dir, onSort: handleSort })] }) }), _jsxs("tbody", { children: [sorted.length === 0 && (_jsx("tr", { children: _jsx("td", { colSpan: 8, style: { textAlign: 'center', padding: '48px', color: 'var(--text-muted)', fontSize: 13 }, children: "No times recorded" }) })), sorted.map((e, i) => {
+                            }, children: s.value })] }, s.label))) })), _jsx("div", { className: "card", style: { flex: 1, minHeight: 0, overflow: 'hidden' }, children: _jsx("div", { style: { height: '100%', overflowY: 'auto', overflowX: 'auto' }, children: _jsxs("table", { style: { minWidth: 600 }, children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { style: { width: 64, textAlign: 'center' }, children: "POS" }), _jsx(SortTh, { label: "Driver", col: "driver_name", sort: sort, dir: dir, onSort: handleSort }), _jsx(SortTh, { label: "Best Lap", col: "lap_time_ms", sort: sort, dir: dir, onSort: handleSort }), _jsx("th", { children: "Gap" }), _jsx("th", { children: "S1" }), _jsx("th", { children: "S2" }), _jsx("th", { children: "S3" }), _jsx(SortTh, { label: "Car", col: "car_model", sort: sort, dir: dir, onSort: handleSort }), _jsx(SortTh, { label: "Date", col: "completed_at", sort: sort, dir: dir, onSort: handleSort })] }) }), _jsxs("tbody", { children: [sorted.length === 0 && (_jsx("tr", { children: _jsx("td", { colSpan: 8, style: { textAlign: 'center', padding: '48px', color: 'var(--text-muted)', fontSize: 13 }, children: "No times recorded" }) })), sorted.map((e, i) => {
                                         const isFirst = i === 0;
                                         const gap = e.lap_time_ms - leaderMs;
                                         return (_jsxs("tr", { style: {

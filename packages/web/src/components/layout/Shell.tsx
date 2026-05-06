@@ -19,7 +19,13 @@ export default function Shell() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <NavBar />
-      <main style={{ flex: 1, padding: 'clamp(16px, 4vw, 32px)', maxWidth: 1200, margin: '0 auto', width: '100%' }}>
+      <main style={{
+        flex: 1, minHeight: 0,
+        padding: 'clamp(16px, 4vw, 24px)',
+        maxWidth: 1200, margin: '0 auto', width: '100%',
+        display: 'flex', flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
         <Outlet />
       </main>
     </div>

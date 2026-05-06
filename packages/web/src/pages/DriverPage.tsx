@@ -280,11 +280,12 @@ export default function DriverPage() {
         <ProgressionSection driverName={decodedName} trackBests={trackBests} color={color} />
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, maxHeight: 320 }}>
         {/* Track bests */}
-        <div>
-          <div className="section-label">Track Records</div>
-          <div className="card">
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <div className="section-label" style={{ flexShrink: 0 }}>Track Records</div>
+          <div className="card" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+            <div style={{ height: '100%', overflowY: 'auto' }}>
             <table>
               <thead>
                 <tr><th>TRACK</th><th>BEST TIME</th><th>CAR</th></tr>
@@ -304,13 +305,15 @@ export default function DriverPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
 
         {/* Recent sessions */}
-        <div>
-          <div className="section-label">Recent Sessions</div>
-          <div className="card">
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <div className="section-label" style={{ flexShrink: 0 }}>Recent Sessions</div>
+          <div className="card" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+            <div style={{ height: '100%', overflowY: 'auto' }}>
             <table>
               <thead>
                 <tr><th>TRACK</th><th>TYPE</th><th>BEST</th><th>LAPS</th></tr>
@@ -337,6 +340,7 @@ export default function DriverPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       </div>

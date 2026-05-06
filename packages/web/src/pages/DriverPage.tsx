@@ -72,7 +72,7 @@ function ProgressionSection({ driverName, trackBests, color }: {
         </span>
       </div>
 
-      <SessionProgressChart sessions={filtered} height={130} accentColor={color} />
+      <SessionProgressChart sessions={filtered} height={110} accentColor={color} />
     </div>
   );
 }
@@ -90,6 +90,7 @@ export default function DriverPage() {
   const [saveError, setSaveError] = useState('');
   const [notFound, setNotFound] = useState(false);
 
+  const [showEditModal, setShowEditModal] = useState(false);
   const decodedName = name ? decodeURIComponent(name) : '';
   const isMyProfile = me?.name === decodedName && me?.claimed;
   const isMobile = useIsMobile();
@@ -143,137 +144,105 @@ export default function DriverPage() {
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 14, overflow: 'hidden' }}>
-      {/* Header card — fixed height */}
+      {/* Compact header banner */}
+      {showEditModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}
+          onClick={e => { if (e.target === e.currentTarget) setShowEditModal(false); }}>
+          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderTop: `3px solid ${color}`, borderRadius: 10, padding: '28px 24px', width: '100%', maxWidth: 380, boxShadow: '0 24px 64px rgba(0,0,0,0.8)' }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: color, marginBottom: 20 }}>Edit Profile</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Color</div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {['#cc0000','#00aaff','#00cc44','#ff8800','#aa00ff','#ff006e','#00cccc','#ffffff'].map(c => (
+                    <div key={c} onClick={() => setColor(c)} style={{ width: 28, height: 28, borderRadius: 4, cursor: 'pointer', background: c, border: color === c ? '2px solid #fff' : '2px solid transparent', boxShadow: color === c ? `0 0 8px ${c}` : 'none' }} />
+                  ))}
+                  <input type="color" value={color} onChange={e => setColor(e.target.value)} style={{ width: 28, height: 28, padding: 2, border: '1px solid #444', cursor: 'pointer', background: '#111', borderRadius: 4 }} />
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Tagline</div>
+                <input type="text" value={tagline} onChange={e => setTagline(e.target.value)} placeholder="Your racing motto..." maxLength={60} style={{ width: '100%' }} />
+              </div>
+              {(showPin || saving) ? (
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>PIN</div>
+                  <input type="password" inputMode="numeric" maxLength={4} value={pin} onChange={e => { setPin(e.target.value.replace(/\D/g, '')); setSaveError(''); }} onKeyDown={e => e.key === 'Enter' && handleSave()} placeholder="••••" style={{ width: '100%', textAlign: 'center', letterSpacing: '0.3em', fontSize: 20 }} autoFocus />
+                  {saveError && <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 6 }}>{saveError}</div>}
+                </div>
+              ) : null}
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
+              <button onClick={showPin ? handleSave : () => setShowPin(true)} disabled={saving} style={{ flex: 1, padding: '10px', fontSize: 13, fontWeight: 700, background: saving ? '#333' : color, color: '#fff', border: 'none', borderRadius: 6, cursor: saving ? 'default' : 'pointer' }}>
+                {saving ? 'Saving...' : saved ? '✓ Saved' : showPin ? 'Confirm' : 'Save Changes'}
+              </button>
+              <button onClick={() => { setShowEditModal(false); setShowPin(false); setPin(''); setSaveError(''); }} style={{ padding: '10px 16px', fontSize: 13, color: 'var(--text-muted)', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 6, cursor: 'pointer' }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{
         flexShrink: 0,
-        background: 'linear-gradient(135deg, #111 0%, #0b0b0b 100%)',
-        border: '1px solid #222',
-        borderTop: `3px solid ${color}`,
-        borderRadius: 4,
-        padding: '24px 28px',
-        display: 'flex',
-        alignItems: 'flex-start',
-        flexWrap: 'wrap',
-        gap: 20,
-        position: 'relative',
-        overflow: 'hidden',
-        boxShadow: `0 0 40px ${color}22`,
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border)',
+        borderLeft: `4px solid ${color}`,
+        borderRadius: 10,
+        padding: '12px 16px',
+        display: 'flex', alignItems: 'center', gap: 14,
+        boxShadow: `0 2px 12px rgba(0,0,0,0.3)`,
       }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${color}, transparent)` }} />
-
-        {/* Color swatch + picker */}
-        <div style={{ position: 'relative', flexShrink: 0 }}>
-          <div style={{
-            width: 72, height: 72,
-            background: `radial-gradient(circle at 35% 35%, ${color}dd, ${color}66)`,
-            borderRadius: 2,
-            border: `2px solid ${color}`,
-            boxShadow: `0 0 20px ${color}88`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 22,
-            color: '#fff',
-            textShadow: '0 2px 8px rgba(0,0,0,0.8)',
-          }}>
-            {profile.name.slice(0, 2).toUpperCase()}
-          </div>
-          <input
-            type="color"
-            value={color}
-            onChange={e => setColor(e.target.value)}
-            title="Pick your driver color"
-            style={{
-              position: 'absolute', bottom: -6, right: -6,
-              width: 24, height: 24,
-              border: '1px solid #444',
-              borderRadius: 2, cursor: 'pointer',
-              padding: 0, background: 'none',
-            }}
-          />
+        {/* Avatar */}
+        <div style={{
+          width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
+          background: `radial-gradient(circle at 35% 35%, ${color}cc, ${color}55)`,
+          border: `2px solid ${color}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 15, color: '#fff',
+        }}>
+          {profile.name.slice(0, 2).toUpperCase()}
         </div>
 
         {/* Name + tagline */}
-        <div style={{ flex: 1 }}>
-          <div style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 28, fontWeight: 900,
-            letterSpacing: '0.05em',
-            color: color,
-            textShadow: `0 0 20px ${color}88`,
-            marginBottom: 6,
-          }}>
-            {profile.name.toUpperCase()}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color, letterSpacing: '0.03em', lineHeight: 1.2 }}>
+            {profile.name}
           </div>
-          <input
-            type="text"
-            value={tagline}
-            onChange={e => setTagline(e.target.value)}
-            placeholder="Enter your tagline..."
-            maxLength={60}
-            style={{ width: '100%', maxWidth: 380, fontSize: 13, color: 'var(--text-secondary)', background: 'transparent', border: 'none', borderBottom: '1px solid #333', borderRadius: 0, padding: '4px 0', outline: 'none' }}
-            onFocus={e => (e.target.style.borderBottomColor = color)}
-            onBlur={e => (e.target.style.borderBottomColor = '#333')}
-          />
-          {isMyProfile && (
-            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {(showPin || saving) && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <input
-                    type="password"
-                    inputMode="numeric"
-                    maxLength={4}
-                    value={pin}
-                    onChange={e => { setPin(e.target.value.replace(/\D/g, '')); setSaveError(''); }}
-                    placeholder="PIN"
-                    onKeyDown={e => e.key === 'Enter' && handleSave()}
-                    style={{ width: 80, textAlign: 'center', letterSpacing: '0.2em', fontSize: 16, padding: '5px 8px' }}
-                    autoFocus
-                  />
-                  {saveError && <span style={{ fontSize: 10, color: 'var(--red)', fontFamily: 'var(--font-display)' }}>{saveError}</span>}
-                </div>
-              )}
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <button
-                  onClick={showPin ? handleSave : () => setShowPin(true)}
-                  disabled={saving}
-                  style={{
-                    fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700,
-                    letterSpacing: '0.1em', padding: '6px 16px',
-                    background: saving ? '#333' : `linear-gradient(180deg, ${color} 0%, ${color}aa 100%)`,
-                    color: '#fff', border: 'none', borderRadius: 0,
-                    clipPath: 'polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%)',
-                    cursor: saving ? 'default' : 'pointer',
-                    boxShadow: saving ? 'none' : `0 0 12px ${color}66`,
-                  }}>
-                  {saving ? 'SAVING...' : saved ? '✓ SAVED' : showPin ? 'CONFIRM SAVE' : 'SAVE PROFILE'}
-                </button>
-                {!showPin && (
-                  <span style={{ fontSize: 10, color: '#333', fontFamily: 'var(--font-display)' }}>
-                    Click the color swatch to change
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-          {!isMyProfile && profile?.claimed && (
-            <div style={{ marginTop: 12, fontSize: 10, color: '#333', fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}>
-              SELECT THIS DRIVER FROM THE MENU TO EDIT
+          {profile.tagline && (
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {profile.tagline}
             </div>
           )}
         </div>
 
-        {/* Quick stats */}
-        <div style={{ display: 'flex', gap: 1, flexShrink: 0, flexWrap: 'wrap' }}>
+        {/* Stats */}
+        <div style={{ display: 'flex', gap: 20, flexShrink: 0 }}>
           {[
-            { label: 'LAPS',   value: String(stats.total_laps) },
-            { label: 'TRACKS', value: String(stats.track_count) },
-            { label: 'BEST',   value: stats.best_lap_ms ? formatLapTime(stats.best_lap_ms) : '—', mono: true },
+            { label: 'Laps',   value: String(stats.total_laps) },
+            { label: 'Tracks', value: String(stats.track_count) },
+            { label: 'Best',   value: stats.best_lap_ms ? formatLapTime(stats.best_lap_ms) : '—' },
           ].map(s => (
-            <div key={s.label} style={{ padding: '8px 16px', background: '#0a0a0a', border: '1px solid #1a1a1a', textAlign: 'center' }}>
-              <div style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: '0.12em', marginBottom: 4 }}>{s.label}</div>
-              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 16, color: 'var(--chrome-light)', letterSpacing: '0.03em' }}>{s.value}</div>
+            <div key={s.label} style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.06em', marginBottom: 2 }}>{s.label}</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 15, color: 'var(--text-primary)' }}>{s.value}</div>
             </div>
           ))}
         </div>
+
+        {/* Edit button — only for own profile */}
+        {isMyProfile && (
+          <button onClick={() => setShowEditModal(true)} style={{
+            padding: '7px 14px', fontSize: 12, fontWeight: 600,
+            background: 'var(--bg-elevated)', color: 'var(--text-secondary)',
+            border: '1px solid var(--border)', borderRadius: 6, cursor: 'pointer', flexShrink: 0,
+          }}
+          onMouseEnter={e => { (e.currentTarget.style.borderColor = color); (e.currentTarget.style.color = color); }}
+          onMouseLeave={e => { (e.currentTarget.style.borderColor = 'var(--border)'); (e.currentTarget.style.color = 'var(--text-secondary)'); }}>
+            Edit
+          </button>
+        )}
       </div>
 
       {/* Session progression chart — fixed height */}

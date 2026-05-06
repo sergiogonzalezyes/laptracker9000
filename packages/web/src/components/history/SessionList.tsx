@@ -97,7 +97,7 @@ export default function SessionList() {
                   {new Date(s.started_at).toLocaleString()}
                 </td>
                 <td>
-                  <Link to={`/history/${s.id}`} style={{ color: 'var(--text-primary)', fontWeight: 600 }}
+                  <Link to={`/sessions/${s.id}`} style={{ color: 'var(--text-primary)', fontWeight: 600 }}
                     onMouseEnter={e => (e.currentTarget.style.color = 'var(--accent-hot)')}
                     onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-primary)')}>
                     {trackDisplayName(s.track)}

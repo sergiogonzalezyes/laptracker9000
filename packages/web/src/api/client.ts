@@ -118,6 +118,15 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pin }),
     }).then(r => r.json() as Promise<{ ok: boolean }>),
+  stats: () => get<{
+    totals: { total_laps: number; valid_laps: number; total_sessions: number; total_drivers: number; total_tracks: number };
+    fastestLap: { lap_time_ms: number; car_model: string; driver_name: string; track: string; completed_at: string } | null;
+    mostActiveDriver: { name: string; lap_count: number; color: string } | null;
+    mostRacedTrack: { track: string; lap_count: number } | null;
+    sessionTypes: { session_type: string; count: number }[];
+    recentActivity: { day: string; laps: number }[];
+    topDrivers: { name: string; total_laps: number; best_lap_ms: number | null; track_count: number; color: string }[];
+  }>('/stats'),
 };
 
 // ── Format helpers ──────────────────────────────────────────────────────────

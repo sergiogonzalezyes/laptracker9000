@@ -31,6 +31,7 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pin }),
     }).then(r => r.json()),
+    stats: () => get('/stats'),
 };
 // ── Format helpers ──────────────────────────────────────────────────────────
 export function formatLapTime(ms) {

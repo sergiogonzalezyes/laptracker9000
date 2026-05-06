@@ -249,7 +249,7 @@ export default function SessionDetail() {
     <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
       {/* Header row */}
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <Link to="/history" style={{ color: 'var(--text-muted)', fontSize: 12 }}>← History</Link>
+        <Link to="/sessions" style={{ color: 'var(--text-muted)', fontSize: 12 }}>← Sessions</Link>
         <span className={`badge badge-${session.session_type.toLowerCase()}`}>{session.session_type}</span>
         <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, letterSpacing: '0.05em' }}>
           {trackDisplayName(session.track).toUpperCase()}

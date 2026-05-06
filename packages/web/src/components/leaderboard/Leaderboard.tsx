@@ -26,18 +26,23 @@ function TrackCard({ track, selected, onClick }: { track: TrackSummary; selected
     <div onClick={onClick} style={{
       cursor: 'pointer',
       padding: '14px 16px',
-      background: selected ? '#0f0000' : 'var(--bg-surface)',
+      background: selected ? '#120006' : 'var(--bg-surface)',
       border: `1px solid ${selected ? '#440000' : 'var(--border)'}`,
-      borderLeft: `3px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
-      borderRadius: 6,
-      minWidth: 170,
+      borderLeft: `3px solid ${selected ? 'var(--accent)' : 'transparent'}`,
+      borderRadius: 10,
       transition: 'all 0.12s',
+      boxShadow: selected
+        ? '0 2px 8px rgba(204,0,0,0.15), 0 4px 16px rgba(0,0,0,0.3)'
+        : '0 1px 3px rgba(0,0,0,0.4)',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      minHeight: 110,
     }}>
       <div style={{
-        fontSize: 12, fontWeight: 700,
+        fontSize: 12, fontWeight: 600,
         color: selected ? 'var(--text-primary)' : 'var(--text-secondary)',
-        marginBottom: 8, lineHeight: 1.3,
-        letterSpacing: '0.01em',
+        lineHeight: 1.35,
       }}>
         {trackDisplayName(track.track)}
         {track.track_config && (
@@ -46,19 +51,21 @@ function TrackCard({ track, selected, onClick }: { track: TrackSummary; selected
           </span>
         )}
       </div>
-      <div style={{
-        fontFamily: 'var(--font-mono)',
-        fontSize: 18, fontWeight: 700,
-        color: selected ? 'var(--accent-hot)' : 'var(--text-primary)',
-        marginBottom: 4,
-      }}>
-        {track.fastest_ms ? formatLapTime(track.fastest_ms) : '—'}
-      </div>
-      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-        {track.fastest_driver || '—'}
-      </div>
-      <div style={{ marginTop: 6, fontSize: 10, color: 'var(--text-muted)' }}>
-        {track.lap_count} laps
+      <div>
+        <div style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: 17, fontWeight: 700,
+          color: selected ? 'var(--accent-hot)' : 'var(--text-primary)',
+          marginBottom: 2, marginTop: 8,
+        }}>
+          {track.fastest_ms ? formatLapTime(track.fastest_ms) : '—'}
+        </div>
+        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+          {track.fastest_driver || '—'}
+        </div>
+        <div style={{ marginTop: 4, fontSize: 10, color: 'var(--text-muted)' }}>
+          {track.lap_count} laps
+        </div>
       </div>
     </div>
   );
@@ -71,7 +78,9 @@ export default function Leaderboard() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [sort, setSort] = useState<SortKey>('lap_time_ms');
   const [dir, setDir] = useState<SortDir>('asc');
+  const [trackPage, setTrackPage] = useState(0);
   const navigate = useNavigate();
+  const TRACKS_PER_PAGE = 12;
 
   useEffect(() => {
     api.tracks().then(t => { setTracks(t); if (t[0]) setSelectedTrack(t[0].track); });
@@ -88,8 +97,16 @@ export default function Leaderboard() {
     const handler = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement).tagName === 'INPUT') return;
       const idx = tracks.findIndex(t => t.track === selectedTrack);
-      if (e.key === 'ArrowLeft'  && idx > 0)                setSelectedTrack(tracks[idx - 1].track);
-      if (e.key === 'ArrowRight' && idx < tracks.length - 1) setSelectedTrack(tracks[idx + 1].track);
+      if (e.key === 'ArrowLeft' && idx > 0) {
+        const prev = tracks[idx - 1];
+        setSelectedTrack(prev.track);
+        setTrackPage(Math.floor((idx - 1) / TRACKS_PER_PAGE));
+      }
+      if (e.key === 'ArrowRight' && idx < tracks.length - 1) {
+        const next = tracks[idx + 1];
+        setSelectedTrack(next.track);
+        setTrackPage(Math.floor((idx + 1) / TRACKS_PER_PAGE));
+      }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
@@ -114,18 +131,74 @@ export default function Leaderboard() {
 
   return (
     <div>
-      {/* Track grid — horizontal scroll on mobile */}
-      <div style={{
-        display: 'flex',
-        flexWrap: isMobile ? 'nowrap' : 'wrap',
-        gap: 8, marginBottom: 20,
-        overflowX: isMobile ? 'auto' : 'visible',
-        paddingBottom: isMobile ? 4 : 0,
-      }}>
-        {tracks.map(t => (
-          <TrackCard key={t.track} track={t} selected={t.track === selectedTrack} onClick={() => setSelectedTrack(t.track)} />
-        ))}
-      </div>
+      {/* Track grid — paginated */}
+      {(() => {
+        const totalPages = Math.ceil(tracks.length / TRACKS_PER_PAGE);
+        const pageTracks = tracks.slice(trackPage * TRACKS_PER_PAGE, (trackPage + 1) * TRACKS_PER_PAGE);
+        return (
+          <>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile
+                ? 'repeat(2, 1fr)'
+                : 'repeat(auto-fill, minmax(175px, 1fr))',
+              gap: 8,
+              marginBottom: 12,
+            }}>
+              {pageTracks.map(t => (
+                <TrackCard key={t.track} track={t} selected={t.track === selectedTrack} onClick={() => setSelectedTrack(t.track)} />
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                <button
+                  onClick={() => setTrackPage(p => Math.max(0, p - 1))}
+                  disabled={trackPage === 0}
+                  style={{
+                    padding: '5px 12px', fontSize: 12, fontWeight: 600,
+                    background: 'var(--bg-elevated)',
+                    color: trackPage === 0 ? 'var(--text-muted)' : 'var(--text-primary)',
+                    border: '1px solid var(--border)', borderRadius: 6,
+                    cursor: trackPage === 0 ? 'default' : 'pointer',
+                  }}
+                >← Prev</button>
+
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button key={i} onClick={() => setTrackPage(i)} style={{
+                      width: 28, height: 28, fontSize: 12, fontWeight: 600,
+                      background: i === trackPage ? 'var(--accent)' : 'var(--bg-elevated)',
+                      color: i === trackPage ? '#fff' : 'var(--text-muted)',
+                      border: `1px solid ${i === trackPage ? 'var(--accent)' : 'var(--border)'}`,
+                      borderRadius: 6, cursor: 'pointer',
+                    }}>
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setTrackPage(p => Math.min(totalPages - 1, p + 1))}
+                  disabled={trackPage === totalPages - 1}
+                  style={{
+                    padding: '5px 12px', fontSize: 12, fontWeight: 600,
+                    background: 'var(--bg-elevated)',
+                    color: trackPage === totalPages - 1 ? 'var(--text-muted)' : 'var(--text-primary)',
+                    border: '1px solid var(--border)', borderRadius: 6,
+                    cursor: trackPage === totalPages - 1 ? 'default' : 'pointer',
+                  }}
+                >Next →</button>
+
+                <span style={{ marginLeft: 4, fontSize: 11, color: 'var(--text-muted)' }}>
+                  {tracks.length} tracks
+                </span>
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       {/* Type filter + nav hint */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 16, alignItems: 'center' }}>

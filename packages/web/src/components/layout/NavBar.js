@@ -59,6 +59,7 @@ export default function NavBar() {
                     background: 'var(--bg-surface)',
                     borderBottom: '1px solid var(--border)',
                     position: 'sticky', top: 0, zIndex: 100,
+                    boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
                 }, children: [_jsx("div", { style: { height: 2, background: accentColor, transition: 'background 0.4s' } }), isMobile ? (_jsxs(_Fragment, { children: [_jsxs("div", { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px' }, children: [_jsxs("span", { style: { fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 14, letterSpacing: '0.05em', userSelect: 'none', marginRight: 'auto' }, children: [_jsx("span", { className: "chrome", children: "LAP" }), _jsx("span", { style: { color: 'var(--accent)' }, children: "TRACKER" })] }), acStatus && acStatus.clients > 0 && (_jsxs("span", { style: { fontSize: 10, color: 'var(--accent-hot)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }, children: [_jsx("span", { className: "dot dot-red" }), acStatus.clients] })), AccountWidget, LiveIndicator] }), _jsx("nav", { style: { display: 'flex', borderTop: '1px solid var(--border)', overflowX: 'auto' }, children: NAV_LINKS.map(({ to, label }) => (_jsx(NavLink, { to: to, style: ({ isActive }) => ({
                                         padding: '10px 16px', fontSize: 12, fontWeight: 600,
                                         color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',

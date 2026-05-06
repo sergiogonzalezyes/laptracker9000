@@ -11,10 +11,13 @@ export default function DriverCard({ driver, rank, leaderBestMs, lapHistory = []
 
   return (
     <div style={{
-      background: isLeader ? '#0f0000' : 'var(--bg-surface)',
-      border: `1px solid ${isLeader ? '#330000' : 'var(--border)'}`,
+      background: isLeader ? '#120006' : 'var(--bg-surface)',
+      border: `1px solid ${isLeader ? '#3a0008' : 'var(--border)'}`,
       borderLeft: `4px solid ${isLeader ? 'var(--accent)' : 'var(--border)'}`,
-      borderRadius: 6,
+      borderRadius: 10,
+      boxShadow: isLeader
+        ? '0 2px 8px rgba(204,0,0,0.15), 0 6px 20px rgba(0,0,0,0.3)'
+        : '0 1px 3px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.15)',
       padding: '16px 18px',
       minWidth: 220,
       cursor: 'pointer',

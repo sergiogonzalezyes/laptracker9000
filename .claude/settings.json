@@ -76,7 +76,11 @@
       "Bash(curl -s \"https://laps.gvtsy.com/api/live\" --max-time 3)",
       "Bash(curl -sv \"https://laps.gvtsy.com/api/live\" --max-time 3)",
       "Bash(curl -s https://laps.gvtsy.com/api/drivers)",
-      "Bash(curl -s --max-time 5 https://laps.gvtsy.com/api/drivers)"
+      "Bash(curl -s --max-time 5 https://laps.gvtsy.com/api/drivers)",
+      "Bash(node scripts/merge-pi-data.js)",
+      "Bash(curl -s https://laps.gvtsy.com/api/leaderboard/tracks)",
+      "Bash(curl -s --max-time 8 https://laps.gvtsy.com/api/leaderboard/tracks)",
+      "PowerShell($procs = Get-NetTCPConnection -LocalPort 3001 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if \\($procs\\) { $procs | ForEach-Object { Stop-Process -Id $_ -Force; Write-Host \"Killed PID $_\" } } else { Write-Host \"Port 3001 already free\" })"
     ],
     "additionalDirectories": [
       "C:\\Users\\Sergio\\Documents\\Github\\apex-watcher",

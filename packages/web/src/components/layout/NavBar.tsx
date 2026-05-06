@@ -138,6 +138,7 @@ export default function NavBar() {
         background: 'var(--bg-surface)',
         borderBottom: '1px solid var(--border)',
         position: 'sticky', top: 0, zIndex: 100,
+        boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
       }}>
         {/* Accent stripe — uses logged-in driver's color */}
         <div style={{ height: 2, background: accentColor, transition: 'background 0.4s' }} />

@@ -1,25 +1,43 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useIsMobile } from '../../hooks/useBreakpoint';
 import { api, formatLapTime, trackDisplayName } from '../../api/client';
+const TRACKS_PER_PAGE = 6;
 function SortTh({ label, col, sort, dir, onSort, style }) {
     const active = sort === col;
     return (_jsxs("th", { onClick: () => onSort(col), style: { cursor: 'pointer', userSelect: 'none', ...style }, children: [_jsx("span", { style: { color: active ? 'var(--accent-hot)' : undefined }, children: label }), _jsx("span", { style: { marginLeft: 4, fontSize: 8, color: active ? 'var(--accent-hot)' : '#2a2a2a' }, children: active ? (dir === 'asc' ? '▲' : '▼') : '▼' })] }));
 }
 export default function Leaderboard() {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [tracks, setTracks] = useState([]);
     const [selectedTrack, setSelectedTrack] = useState('');
+    const [trackPage, setTrackPage] = useState(0);
     const [typeFilter, setTypeFilter] = useState('');
     const [entries, setEntries] = useState([]);
     const [sort, setSort] = useState('lap_time_ms');
     const [dir, setDir] = useState('asc');
     const navigate = useNavigate();
     const isMobile = useIsMobile();
+    const didInit = useRef(false);
     useEffect(() => {
-        api.tracks().then(t => { setTracks(t); if (t[0])
-            setSelectedTrack(t[0].track); });
+        api.tracks().then(t => {
+            setTracks(t);
+            if (didInit.current)
+                return;
+            didInit.current = true;
+            const urlTrack = searchParams.get('track');
+            const idx = urlTrack ? t.findIndex(x => x.track === urlTrack) : -1;
+            const initial = idx >= 0 ? urlTrack : (t[0]?.track ?? '');
+            setSelectedTrack(initial);
+            if (idx >= 0)
+                setTrackPage(Math.floor(idx / TRACKS_PER_PAGE));
+        });
     }, []);
+    const selectTrack = useCallback((track) => {
+        setSelectedTrack(track);
+        setSearchParams({ track }, { replace: true });
+    }, [setSearchParams]);
     useEffect(() => {
         if (!selectedTrack)
             return;
@@ -33,14 +51,20 @@ export default function Leaderboard() {
             if (e.target.tagName === 'INPUT')
                 return;
             const idx = tracks.findIndex(t => t.track === selectedTrack);
-            if (e.key === 'ArrowLeft' && idx > 0)
-                setSelectedTrack(tracks[idx - 1].track);
-            if (e.key === 'ArrowRight' && idx < tracks.length - 1)
-                setSelectedTrack(tracks[idx + 1].track);
+            if (e.key === 'ArrowLeft' && idx > 0) {
+                const next = tracks[idx - 1].track;
+                selectTrack(next);
+                setTrackPage(Math.floor((idx - 1) / TRACKS_PER_PAGE));
+            }
+            if (e.key === 'ArrowRight' && idx < tracks.length - 1) {
+                const next = tracks[idx + 1].track;
+                selectTrack(next);
+                setTrackPage(Math.floor((idx + 1) / TRACKS_PER_PAGE));
+            }
         };
         window.addEventListener('keydown', handler);
         return () => window.removeEventListener('keydown', handler);
-    }, [tracks, selectedTrack]);
+    }, [tracks, selectedTrack, selectTrack]);
     const handleSort = useCallback((col) => {
         if (sort === col)
             setDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -65,18 +89,20 @@ export default function Leaderboard() {
     const bestS1 = Math.min(...entries.filter(e => e.split1_ms).map(e => e.split1_ms));
     const bestS2 = Math.min(...entries.filter(e => e.split2_ms).map(e => e.split2_ms));
     const bestS3 = Math.min(...entries.filter(e => e.split3_ms).map(e => e.split3_ms));
-    return (_jsxs("div", { style: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 0 }, children: [_jsxs("div", { style: { flexShrink: 0, marginBottom: 12 }, children: [_jsx("div", { style: { fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }, children: "Select Track" }), _jsx("div", { style: { display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }, children: tracks.map(t => {
+    const totalPages = Math.ceil(tracks.length / TRACKS_PER_PAGE);
+    const visibleTracks = tracks.slice(trackPage * TRACKS_PER_PAGE, (trackPage + 1) * TRACKS_PER_PAGE);
+    return (_jsxs("div", { style: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 0 }, children: [_jsxs("div", { style: { flexShrink: 0, marginBottom: 12 }, children: [_jsxs("div", { style: { display: 'flex', alignItems: 'center', marginBottom: 8, gap: 8 }, children: [_jsx("div", { style: { fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }, children: "Select Track" }), totalPages > 1 && (_jsxs("div", { style: { marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }, children: [_jsxs("span", { style: { fontSize: 10, color: 'var(--text-muted)' }, children: [trackPage + 1, " / ", totalPages] }), _jsx("button", { onClick: () => setTrackPage(p => Math.max(0, p - 1)), disabled: trackPage === 0, style: { padding: '3px 10px', fontSize: 12, borderRadius: 5, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: trackPage === 0 ? 'var(--text-muted)' : 'var(--text-primary)', cursor: trackPage === 0 ? 'default' : 'pointer' }, children: "\u2039" }), _jsx("button", { onClick: () => setTrackPage(p => Math.min(totalPages - 1, p + 1)), disabled: trackPage === totalPages - 1, style: { padding: '3px 10px', fontSize: 12, borderRadius: 5, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: trackPage === totalPages - 1 ? 'var(--text-muted)' : 'var(--text-primary)', cursor: trackPage === totalPages - 1 ? 'default' : 'pointer' }, children: "\u203A" })] }))] }), _jsx("div", { style: { display: 'flex', gap: 8 }, children: visibleTracks.map(t => {
                             const isSelected = t.track === selectedTrack;
-                            return (_jsxs("div", { onClick: () => setSelectedTrack(t.track), style: {
-                                    flexShrink: 0, cursor: 'pointer',
+                            return (_jsxs("div", { onClick: () => selectTrack(t.track), style: {
+                                    flex: 1, cursor: 'pointer',
                                     padding: '10px 14px',
                                     background: isSelected ? 'var(--bg-elevated)' : 'var(--bg-surface)',
                                     border: `1px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`,
                                     borderRadius: 8,
-                                    minWidth: 130, maxWidth: 160,
+                                    minWidth: 0,
                                     transition: 'all 0.12s',
                                     boxShadow: isSelected ? `0 0 12px rgba(204,0,0,0.2)` : 'none',
-                                }, children: [_jsx("div", { style: { fontSize: 11, fontWeight: 600, color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)', marginBottom: 6, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }, children: trackDisplayName(t.track) }), t.track_config && _jsx("div", { style: { fontSize: 9, color: 'var(--text-muted)', marginBottom: 4 }, children: t.track_config }), _jsx("div", { style: { fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 700, color: isSelected ? 'var(--accent-hot)' : 'var(--text-primary)', marginBottom: 2 }, children: t.fastest_ms ? formatLapTime(t.fastest_ms) : '—' }), _jsx("div", { style: { fontSize: 10, color: 'var(--text-muted)' }, children: t.fastest_driver || '—' })] }, t.track));
+                                }, children: [_jsx("div", { style: { fontSize: 11, fontWeight: 600, color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)', marginBottom: 6, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }, children: trackDisplayName(t.track) }), t.track_config && _jsx("div", { style: { fontSize: 9, color: 'var(--text-muted)', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }, children: t.track_config }), _jsx("div", { style: { fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 700, color: isSelected ? 'var(--accent-hot)' : 'var(--text-primary)', marginBottom: 2 }, children: t.fastest_ms ? formatLapTime(t.fastest_ms) : '—' }), _jsx("div", { style: { fontSize: 10, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }, children: t.fastest_driver || '—' })] }, t.track));
                         }) })] }), currentTrack && (_jsxs("div", { style: {
                     flexShrink: 0,
                     background: 'var(--bg-surface)',

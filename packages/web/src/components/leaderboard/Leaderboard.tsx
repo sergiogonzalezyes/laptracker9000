@@ -1,10 +1,12 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useIsMobile } from '../../hooks/useBreakpoint';
 import { api, LeaderboardEntry, TrackSummary, formatLapTime, trackDisplayName } from '../../api/client';
 
 type SortKey = 'lap_time_ms' | 'driver_name' | 'car_model' | 'completed_at';
 type SortDir = 'asc' | 'desc';
+
+const TRACKS_PER_PAGE = 6;
 
 function SortTh({ label, col, sort, dir, onSort, style }: {
   label: string; col: SortKey; sort: SortKey; dir: SortDir;
@@ -22,18 +24,35 @@ function SortTh({ label, col, sort, dir, onSort, style }: {
 }
 
 export default function Leaderboard() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tracks, setTracks] = useState<TrackSummary[]>([]);
   const [selectedTrack, setSelectedTrack] = useState('');
+  const [trackPage, setTrackPage] = useState(0);
   const [typeFilter, setTypeFilter] = useState('');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [sort, setSort] = useState<SortKey>('lap_time_ms');
   const [dir, setDir] = useState<SortDir>('asc');
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const didInit = useRef(false);
 
   useEffect(() => {
-    api.tracks().then(t => { setTracks(t); if (t[0]) setSelectedTrack(t[0].track); });
+    api.tracks().then(t => {
+      setTracks(t);
+      if (didInit.current) return;
+      didInit.current = true;
+      const urlTrack = searchParams.get('track');
+      const idx = urlTrack ? t.findIndex(x => x.track === urlTrack) : -1;
+      const initial = idx >= 0 ? urlTrack! : (t[0]?.track ?? '');
+      setSelectedTrack(initial);
+      if (idx >= 0) setTrackPage(Math.floor(idx / TRACKS_PER_PAGE));
+    });
   }, []);
+
+  const selectTrack = useCallback((track: string) => {
+    setSelectedTrack(track);
+    setSearchParams({ track }, { replace: true });
+  }, [setSearchParams]);
 
   useEffect(() => {
     if (!selectedTrack) return;
@@ -46,12 +65,20 @@ export default function Leaderboard() {
     const handler = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement).tagName === 'INPUT') return;
       const idx = tracks.findIndex(t => t.track === selectedTrack);
-      if (e.key === 'ArrowLeft' && idx > 0)                setSelectedTrack(tracks[idx - 1].track);
-      if (e.key === 'ArrowRight' && idx < tracks.length - 1) setSelectedTrack(tracks[idx + 1].track);
+      if (e.key === 'ArrowLeft' && idx > 0) {
+        const next = tracks[idx - 1].track;
+        selectTrack(next);
+        setTrackPage(Math.floor((idx - 1) / TRACKS_PER_PAGE));
+      }
+      if (e.key === 'ArrowRight' && idx < tracks.length - 1) {
+        const next = tracks[idx + 1].track;
+        selectTrack(next);
+        setTrackPage(Math.floor((idx + 1) / TRACKS_PER_PAGE));
+      }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [tracks, selectedTrack]);
+  }, [tracks, selectedTrack, selectTrack]);
 
   const handleSort = useCallback((col: SortKey) => {
     if (sort === col) setDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -74,36 +101,58 @@ export default function Leaderboard() {
   const bestS2 = Math.min(...entries.filter(e => e.split2_ms).map(e => e.split2_ms!));
   const bestS3 = Math.min(...entries.filter(e => e.split3_ms).map(e => e.split3_ms!));
 
+  const totalPages = Math.ceil(tracks.length / TRACKS_PER_PAGE);
+  const visibleTracks = tracks.slice(trackPage * TRACKS_PER_PAGE, (trackPage + 1) * TRACKS_PER_PAGE);
+
   return (
     <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 0 }}>
 
-      {/* Track selector — horizontal scrollable strip */}
+      {/* Track selector — paginated strip */}
       <div style={{ flexShrink: 0, marginBottom: 12 }}>
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>
-          Select Track
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8, gap: 8 }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            Select Track
+          </div>
+          {totalPages > 1 && (
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                {trackPage + 1} / {totalPages}
+              </span>
+              <button
+                onClick={() => setTrackPage(p => Math.max(0, p - 1))}
+                disabled={trackPage === 0}
+                style={{ padding: '3px 10px', fontSize: 12, borderRadius: 5, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: trackPage === 0 ? 'var(--text-muted)' : 'var(--text-primary)', cursor: trackPage === 0 ? 'default' : 'pointer' }}
+              >‹</button>
+              <button
+                onClick={() => setTrackPage(p => Math.min(totalPages - 1, p + 1))}
+                disabled={trackPage === totalPages - 1}
+                style={{ padding: '3px 10px', fontSize: 12, borderRadius: 5, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: trackPage === totalPages - 1 ? 'var(--text-muted)' : 'var(--text-primary)', cursor: trackPage === totalPages - 1 ? 'default' : 'pointer' }}
+              >›</button>
+            </div>
+          )}
         </div>
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
-          {tracks.map(t => {
+        <div style={{ display: 'flex', gap: 8 }}>
+          {visibleTracks.map(t => {
             const isSelected = t.track === selectedTrack;
             return (
-              <div key={t.track} onClick={() => setSelectedTrack(t.track)} style={{
-                flexShrink: 0, cursor: 'pointer',
+              <div key={t.track} onClick={() => selectTrack(t.track)} style={{
+                flex: 1, cursor: 'pointer',
                 padding: '10px 14px',
                 background: isSelected ? 'var(--bg-elevated)' : 'var(--bg-surface)',
                 border: `1px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`,
                 borderRadius: 8,
-                minWidth: 130, maxWidth: 160,
+                minWidth: 0,
                 transition: 'all 0.12s',
                 boxShadow: isSelected ? `0 0 12px rgba(204,0,0,0.2)` : 'none',
               }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)', marginBottom: 6, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {trackDisplayName(t.track)}
                 </div>
-                {t.track_config && <div style={{ fontSize: 9, color: 'var(--text-muted)', marginBottom: 4 }}>{t.track_config}</div>}
+                {t.track_config && <div style={{ fontSize: 9, color: 'var(--text-muted)', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.track_config}</div>}
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 700, color: isSelected ? 'var(--accent-hot)' : 'var(--text-primary)', marginBottom: 2 }}>
                   {t.fastest_ms ? formatLapTime(t.fastest_ms) : '—'}
                 </div>
-                <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{t.fastest_driver || '—'}</div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.fastest_driver || '—'}</div>
               </div>
             );
           })}
